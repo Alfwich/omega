@@ -16,7 +16,9 @@ pub struct Timer {
 
 impl Default for Timer {
     fn default() -> Self {
-        Timer { last: Instant::now() }
+        Timer {
+            last: Instant::now(),
+        }
     }
 }
 

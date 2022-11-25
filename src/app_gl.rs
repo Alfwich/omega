@@ -64,9 +64,21 @@ pub fn load_image_from_disk(path: &str, width: i32, height: i32) -> Result<u32, 
         GenTextures(1, &mut id);
         if id != 0 {
             BindTexture(TEXTURE_2D, id);
-            TexParameteri(TEXTURE_2D, TEXTURE_WRAP_S, CLAMP_TO_EDGE.try_into().unwrap());
-            TexParameteri(TEXTURE_2D, TEXTURE_WRAP_T, CLAMP_TO_EDGE.try_into().unwrap());
-            TexParameteri(TEXTURE_2D, TEXTURE_MIN_FILTER, LINEAR_MIPMAP_LINEAR.try_into().unwrap());
+            TexParameteri(
+                TEXTURE_2D,
+                TEXTURE_WRAP_S,
+                CLAMP_TO_EDGE.try_into().unwrap(),
+            );
+            TexParameteri(
+                TEXTURE_2D,
+                TEXTURE_WRAP_T,
+                CLAMP_TO_EDGE.try_into().unwrap(),
+            );
+            TexParameteri(
+                TEXTURE_2D,
+                TEXTURE_MIN_FILTER,
+                LINEAR_MIPMAP_LINEAR.try_into().unwrap(),
+            );
             TexParameteri(TEXTURE_2D, TEXTURE_MAG_FILTER, LINEAR.try_into().unwrap());
             let img_data = Image::from_memory(&img_bytes);
             match img_data {
@@ -108,9 +120,21 @@ pub fn load_image_from_url(client: &reqwest::blocking::Client, url: &str) -> Res
                 GenTextures(1, &mut id);
                 if id != 0 {
                     BindTexture(TEXTURE_2D, id);
-                    TexParameteri(TEXTURE_2D, TEXTURE_WRAP_S, CLAMP_TO_EDGE.try_into().unwrap());
-                    TexParameteri(TEXTURE_2D, TEXTURE_WRAP_T, CLAMP_TO_EDGE.try_into().unwrap());
-                    TexParameteri(TEXTURE_2D, TEXTURE_MIN_FILTER, LINEAR_MIPMAP_LINEAR.try_into().unwrap());
+                    TexParameteri(
+                        TEXTURE_2D,
+                        TEXTURE_WRAP_S,
+                        CLAMP_TO_EDGE.try_into().unwrap(),
+                    );
+                    TexParameteri(
+                        TEXTURE_2D,
+                        TEXTURE_WRAP_T,
+                        CLAMP_TO_EDGE.try_into().unwrap(),
+                    );
+                    TexParameteri(
+                        TEXTURE_2D,
+                        TEXTURE_MIN_FILTER,
+                        LINEAR_MIPMAP_LINEAR.try_into().unwrap(),
+                    );
                     TexParameteri(TEXTURE_2D, TEXTURE_MAG_FILTER, LINEAR.try_into().unwrap());
                     let img_data = Image::from_memory(&resp_bytes);
                     match img_data {
@@ -148,7 +172,13 @@ pub fn load_image_from_url(client: &reqwest::blocking::Client, url: &str) -> Res
     }
 }
 
-fn sw_blit_to_buffer(offset: (i32, i32), size: (u32, u32), top: i32, dst: &mut TextTextureData, src: &[u8]) {
+fn sw_blit_to_buffer(
+    offset: (i32, i32),
+    size: (u32, u32),
+    top: i32,
+    dst: &mut TextTextureData,
+    src: &[u8],
+) {
     let y_offset = (-top + offset.1) as i32;
     for x in 0..size.0 {
         let x_pos = (x + offset.0 as u32) as usize;
@@ -164,7 +194,8 @@ fn sw_blit_to_buffer(offset: (i32, i32), size: (u32, u32), top: i32, dst: &mut T
 
             let val = src[x as usize + ((y * size.0) as usize)] as i32;
             let existing = dst.rows.get_mut(&y_dst_pos).unwrap()[x_pos] as i32;
-            dst.rows.get_mut(&y_dst_pos).unwrap()[x_pos] = crate::util::clamp(val + existing, 0, 255) as u8;
+            dst.rows.get_mut(&y_dst_pos).unwrap()[x_pos] =
+                crate::util::clamp(val + existing, 0, 255) as u8;
         }
     }
 }
@@ -173,7 +204,9 @@ fn sw_render_text_to_buffer(str: &str, data: &mut TextTextureData) {
     static FONT_FILE: &str = "GlacialIndifference-Bold.otf";
     let lib = freetype::Library::init().unwrap();
     let face = lib.new_face(FONT_FILE, 0).unwrap();
-    face.set_char_size(80 * 32, 0, 100, 0).map_err(|err| println!("{:?}", err)).ok();
+    face.set_char_size(80 * 32, 0, 100, 0)
+        .map_err(|err| println!("{:?}", err))
+        .ok();
     let mut offset = (0i32, 0i32);
     for c in str.chars() {
         face.load_char(c as usize, freetype::face::LoadFlag::RENDER)
@@ -215,7 +248,10 @@ fn sw_render_text_to_buffer(str: &str, data: &mut TextTextureData) {
     }
     data.rows.clear();
 
-    assert!(data.data.len() == data.width * data.height, "data should be width * height");
+    assert!(
+        data.data.len() == data.width * data.height,
+        "data should be width * height"
+    );
 }
 
 pub fn render_text_to_texture(str: &str) -> RenderedImage {
@@ -223,9 +259,21 @@ pub fn render_text_to_texture(str: &str) -> RenderedImage {
         let mut id: u32 = 0;
         GenTextures(1, &mut id);
         BindTexture(TEXTURE_2D, id);
-        TexParameteri(TEXTURE_2D, TEXTURE_WRAP_S, CLAMP_TO_EDGE.try_into().unwrap());
-        TexParameteri(TEXTURE_2D, TEXTURE_WRAP_T, CLAMP_TO_EDGE.try_into().unwrap());
-        TexParameteri(TEXTURE_2D, TEXTURE_MIN_FILTER, LINEAR_MIPMAP_LINEAR.try_into().unwrap());
+        TexParameteri(
+            TEXTURE_2D,
+            TEXTURE_WRAP_S,
+            CLAMP_TO_EDGE.try_into().unwrap(),
+        );
+        TexParameteri(
+            TEXTURE_2D,
+            TEXTURE_WRAP_T,
+            CLAMP_TO_EDGE.try_into().unwrap(),
+        );
+        TexParameteri(
+            TEXTURE_2D,
+            TEXTURE_MIN_FILTER,
+            LINEAR_MIPMAP_LINEAR.try_into().unwrap(),
+        );
         TexParameteri(TEXTURE_2D, TEXTURE_MAG_FILTER, LINEAR.try_into().unwrap());
         PixelStorei(UNPACK_ALIGNMENT, 1);
 
@@ -283,7 +331,10 @@ fn create_shader(shader_type: u32, shader_source_location: &str) -> Result<u32, 
         if id != 0 {
             let mut source = File::open(shader_source_location).unwrap();
             let mut contents = Vec::new();
-            source.read_to_end(&mut contents).map_err(|err| println!("{:?}", err)).ok();
+            source
+                .read_to_end(&mut contents)
+                .map_err(|err| println!("{:?}", err))
+                .ok();
             let content_length = contents.len() as i32;
             let contents_ptr = contents.as_ptr();
             let contents_i8_ptr = contents_ptr as *const i8;
@@ -340,7 +391,10 @@ fn create_and_link_program(vertex_shader_source: &str, fragment_shader_source: &
                 }
             }
             let error_string = std::str::from_utf8(&str_data);
-            println!("Failed to link program with error_status: {}, log: {:?}", link_status, error_string);
+            println!(
+                "Failed to link program with error_status: {}, log: {:?}",
+                link_status, error_string
+            );
         }
 
         DeleteShader(vertex_shader);
@@ -391,12 +445,21 @@ fn upload_buffer_data(vao: u32, vbo: u32, ebo: u32) {
         );
         VertexAttribPointer(0, 3, FLOAT, FALSE, size_of_vertex, 0 as *const c_void);
         EnableVertexAttribArray(0);
-        VertexAttribPointer(1, 2, FLOAT, FALSE, size_of_vertex, size_of_vertex_pos as *const c_void);
+        VertexAttribPointer(
+            1,
+            2,
+            FLOAT,
+            FALSE,
+            size_of_vertex,
+            size_of_vertex_pos as *const c_void,
+        );
         EnableVertexAttribArray(1);
         BindBuffer(ELEMENT_ARRAY_BUFFER, ebo);
         BufferData(
             ELEMENT_ARRAY_BUFFER,
-            (std::mem::size_of::<i32>() * index_data.len()).try_into().unwrap(),
+            (std::mem::size_of::<i32>() * index_data.len())
+                .try_into()
+                .unwrap(),
             index_data.as_ptr() as *const c_void,
             STATIC_DRAW,
         );
@@ -413,17 +476,22 @@ impl Default for AppGL {
             let vao = gen_vertex_buffer();
             let vbo = gen_buffer();
             let ebo = gen_buffer();
-            let tile_program_id = create_and_link_program("res/glsl/tilev.glsl", "res/glsl/tile.glsl");
-            let text_program_id = create_and_link_program("res/glsl/textv.glsl", "res/glsl/text.glsl");
+            let tile_program_id =
+                create_and_link_program("res/glsl/tilev.glsl", "res/glsl/tile.glsl");
+            let text_program_id =
+                create_and_link_program("res/glsl/textv.glsl", "res/glsl/text.glsl");
 
             upload_buffer_data(vao, vbo, ebo);
 
             let mvp_name = "mvp\0".as_bytes();
             let border_name = "border\0".as_bytes();
 
-            let tile_program_mvp_loc = GetUniformLocation(tile_program_id, mvp_name.as_ptr() as *const i8);
-            let tile_program_border_loc = GetUniformLocation(tile_program_id, border_name.as_ptr() as *const i8);
-            let text_program_mvp_loc = GetUniformLocation(text_program_id, mvp_name.as_ptr() as *const i8);
+            let tile_program_mvp_loc =
+                GetUniformLocation(tile_program_id, mvp_name.as_ptr() as *const i8);
+            let tile_program_border_loc =
+                GetUniformLocation(tile_program_id, border_name.as_ptr() as *const i8);
+            let text_program_mvp_loc =
+                GetUniformLocation(text_program_id, mvp_name.as_ptr() as *const i8);
 
             AppGL {
                 vao,
@@ -440,87 +508,83 @@ impl Default for AppGL {
 }
 
 // TODO: Break out the gl specifics to prevent leaking App constructs
-pub fn render(app: &crate::App, windows_size: &(u32, u32)) {
+pub unsafe fn render(app: &crate::App, windows_size: &(u32, u32)) {
     let id = glm::identity::<f32, 4>();
 
     let ortho = glm::ortho(0.0f32, windows_size.0 as f32, 0., windows_size.1 as f32, -10., 100.);
     let base_move = glm::make_vec3(&[windows_size.0 as f32 / 2. - 550., windows_size.1 as f32 / 2. + 350., 0.0]);
 
-    unsafe {
-        Clear(COLOR_BUFFER_BIT | DEPTH_BUFFER_BIT);
-        Enable(BLEND);
-        BlendFunc(SRC_ALPHA, ONE_MINUS_SRC_ALPHA);
-        Viewport(0, 0, windows_size.0.try_into().unwrap(), windows_size.1.try_into().unwrap());
-        BindVertexArray(app.gl.vao);
-        BindBuffer(ELEMENT_ARRAY_BUFFER, app.gl.ebo);
+    Clear(COLOR_BUFFER_BIT | DEPTH_BUFFER_BIT);
+    Enable(BLEND);
+    BlendFunc(SRC_ALPHA, ONE_MINUS_SRC_ALPHA);
+    Viewport(0, 0, windows_size.0.try_into().unwrap(), windows_size.1.try_into().unwrap());
+    BindVertexArray(app.gl.vao);
+    BindBuffer(ELEMENT_ARRAY_BUFFER, app.gl.ebo);
 
-        // Draw Background
+    // Draw Background
+    {
+        let scale = glm::make_vec3(&[windows_size.0 as f32, windows_size.1 as f32, 1.]);
+        let model = glm::scale(&id, &scale);
+        let mve = glm::make_vec3(&[windows_size.0 as f32 / 2., windows_size.1 as f32 / 2., 0.]);
+        let view = glm::translate(&id, &mve);
+        let mvp = ortho * view * model;
+
+        UseProgram(app.gl.tile_program_id);
+        UniformMatrix4fv(app.gl.tile_program_mvp_loc, 1, FALSE, mvp.data.as_slice().as_ptr());
+        Uniform1f(app.gl.tile_program_border_loc, 0.);
+        BindTexture(TEXTURE_2D, app.state.background_image.texture_id);
+        DrawElements(TRIANGLES, 6, UNSIGNED_INT, 0 as *const c_void);
+    }
+
+    /*
+    let mut render_cursor = (0., 0.);
+    for container in &app.containers {
         {
-            let scale = glm::make_vec3(&[windows_size.0 as f32, windows_size.1 as f32, 1.]);
+            let scale = glm::make_vec3(&[container.title.width as f32, container.title.height as f32, 1.]);
             let model = glm::scale(&id, &scale);
-            let mve = glm::make_vec3(&[windows_size.0 as f32 / 2., windows_size.1 as f32 / 2., 0.]);
+            let mve = base_move
+                + glm::make_vec3(&[
+                    app.viewport.pos[0] + (container.title.width as f32 / 2.) - 250.,
+                    app.viewport.pos[1] - render_cursor.1 as f32,
+                    0.,
+                ]);
             let view = glm::translate(&id, &mve);
             let mvp = ortho * view * model;
 
-            UseProgram(app.gl.tile_program_id);
-            UniformMatrix4fv(app.gl.tile_program_mvp_loc, 1, FALSE, mvp.data.as_slice().as_ptr());
-            Uniform1f(app.gl.tile_program_border_loc, 0.);
-            BindTexture(TEXTURE_2D, app.background_image_texture_id);
+            UseProgram(app.gl.text_program_id);
+            UniformMatrix4fv(app.gl.text_program_mvp_loc, 1, FALSE, mvp.data.as_slice().as_ptr());
+            BindTexture(TEXTURE_2D, container.title.texture_id);
             DrawElements(TRIANGLES, 6, UNSIGNED_INT, 0 as *const c_void);
+
+            render_cursor.1 += app.title_height;
         }
 
-        if !app.has_tiles_loaded {
-            return;
-        }
-
-        let mut render_cursor = (0., 0.);
-        for container in &app.containers {
+        render_cursor.0 -= container.selected_tile_idx * app.tile_width;
+        for image in &container.images {
             {
-                let scale = glm::make_vec3(&[container.title.width as f32, container.title.height as f32, 1.]);
+                let scale = glm::make_vec3(&[500. * image.scale, 281. * image.scale, 1.0]);
                 let model = glm::scale(&id, &scale);
                 let mve = base_move
                     + glm::make_vec3(&[
-                        app.viewport.pos[0] + (container.title.width as f32 / 2.) - 250.,
+                        app.viewport.pos[0] + render_cursor.0 as f32,
                         app.viewport.pos[1] - render_cursor.1 as f32,
                         0.,
                     ]);
                 let view = glm::translate(&id, &mve);
                 let mvp = ortho * view * model;
 
-                UseProgram(app.gl.text_program_id);
-                UniformMatrix4fv(app.gl.text_program_mvp_loc, 1, FALSE, mvp.data.as_slice().as_ptr());
-                BindTexture(TEXTURE_2D, container.title.texture_id);
+                UseProgram(app.gl.tile_program_id);
+                UniformMatrix4fv(app.gl.tile_program_mvp_loc, 1, FALSE, mvp.data.as_slice().as_ptr());
+                Uniform1f(app.gl.tile_program_border_loc, image.border);
+                BindTexture(TEXTURE_2D, image.texture_id);
                 DrawElements(TRIANGLES, 6, UNSIGNED_INT, 0 as *const c_void);
-
-                render_cursor.1 += app.title_height;
+                render_cursor.0 += app.tile_width;
             }
-
-            render_cursor.0 -= container.selected_tile_idx * app.tile_width;
-            for image in &container.images {
-                {
-                    let scale = glm::make_vec3(&[500. * image.scale, 281. * image.scale, 1.0]);
-                    let model = glm::scale(&id, &scale);
-                    let mve = base_move
-                        + glm::make_vec3(&[
-                            app.viewport.pos[0] + render_cursor.0 as f32,
-                            app.viewport.pos[1] - render_cursor.1 as f32,
-                            0.,
-                        ]);
-                    let view = glm::translate(&id, &mve);
-                    let mvp = ortho * view * model;
-
-                    UseProgram(app.gl.tile_program_id);
-                    UniformMatrix4fv(app.gl.tile_program_mvp_loc, 1, FALSE, mvp.data.as_slice().as_ptr());
-                    Uniform1f(app.gl.tile_program_border_loc, image.border);
-                    BindTexture(TEXTURE_2D, image.texture_id);
-                    DrawElements(TRIANGLES, 6, UNSIGNED_INT, 0 as *const c_void);
-                    render_cursor.0 += app.tile_width;
-                }
-            }
-            render_cursor.1 += app.row_height;
-            render_cursor.0 = 0.;
         }
+        render_cursor.1 += app.row_height;
+        render_cursor.0 = 0.;
     }
+    */
 }
 
 impl Drop for AppGL {
