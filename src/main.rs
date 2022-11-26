@@ -69,7 +69,7 @@ fn main() {
 
     while window.is_open() {
         let dt = frame_timer.dt();
-        
+
         handle_window_events(&mut window);
 
         update(&mut app, dt);

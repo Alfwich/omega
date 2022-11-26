@@ -597,6 +597,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "omega_survival"
+version = "0.1.0"
+dependencies = [
+ "freetype-rs",
+ "gl",
+ "gl_loader",
+ "itertools",
+ "lazy_static",
+ "nalgebra-glm",
+ "num_cpus",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "sfml",
+]
+
+[[package]]
 name = "once_cell"
 version = "1.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -853,23 +870,6 @@ name = "sfml-build"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "53e0893aaf18583de27202b17007258377d5c4be16e1d0b601fd6943bc36c98b"
-
-[[package]]
-name = "sfml_example"
-version = "0.1.0"
-dependencies = [
- "freetype-rs",
- "gl",
- "gl_loader",
- "itertools",
- "lazy_static",
- "nalgebra-glm",
- "num_cpus",
- "reqwest",
- "serde",
- "serde_json",
- "sfml",
-]
 
 [[package]]
 name = "simba"

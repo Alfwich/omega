@@ -29,7 +29,7 @@ struct Vertex {
 }
 
 #[derive(Debug)]
-pub struct RenderedImage {
+pub struct TextImageResult {
     pub texture_id: u32,
     pub width: u32,
     pub height: u32,
@@ -114,7 +114,8 @@ pub fn load_image_from_disk(path: &str, width: i32, height: i32) -> Result<u32, 
 pub fn load_image_from_url(client: &reqwest::blocking::Client, url: &str) -> Result<u32, String> {
     match client.get(url).send() {
         Ok(response) => {
-            let resp_bytes = response.bytes().unwrap();
+            let resp = response.bytes();
+            let resp_bytes = resp.unwrap();
             unsafe {
                 let mut id: u32 = 0;
                 GenTextures(1, &mut id);
@@ -141,12 +142,13 @@ pub fn load_image_from_url(client: &reqwest::blocking::Client, url: &str) -> Res
                         Some(img_data) => {
                             let img_data_ptr = img_data.pixel_data().as_ptr() as *const c_void;
                             // RGBA since pixel_data pads to 4 channels
+                            // TODO: Need to factor in the size of the resulting image
                             TexImage2D(
                                 TEXTURE_2D,
                                 0,
                                 RGBA.try_into().unwrap(),
-                                500,
-                                281,
+                                223,
+                                310,
                                 0,
                                 RGBA,
                                 UNSIGNED_BYTE,
@@ -254,10 +256,15 @@ fn sw_render_text_to_buffer(str: &str, data: &mut TextTextureData) {
     );
 }
 
-pub fn render_text_to_texture(str: &str) -> RenderedImage {
+pub fn render_text_to_texture(str: &str) -> Result<TextImageResult, &str> {
     unsafe {
         let mut id: u32 = 0;
         GenTextures(1, &mut id);
+
+        if id == 0 {
+            return Err("Failed to generate texture for text");
+        }
+
         BindTexture(TEXTURE_2D, id);
         TexParameteri(
             TEXTURE_2D,
@@ -294,11 +301,11 @@ pub fn render_text_to_texture(str: &str) -> RenderedImage {
         GenerateMipmap(TEXTURE_2D);
         BindTexture(TEXTURE_2D, 0);
 
-        RenderedImage {
+        Ok(TextImageResult {
             texture_id: id,
             width: texture_data.width as u32,
             height: texture_data.height as u32,
-        }
+        })
     }
 }
 
@@ -510,14 +517,24 @@ impl Default for AppGL {
 // TODO: Break out the gl specifics to prevent leaking App constructs
 pub unsafe fn render(app: &crate::App, windows_size: &(u32, u32)) {
     let id = glm::identity::<f32, 4>();
-
-    let ortho = glm::ortho(0.0f32, windows_size.0 as f32, 0., windows_size.1 as f32, -10., 100.);
-    let base_move = glm::make_vec3(&[windows_size.0 as f32 / 2. - 550., windows_size.1 as f32 / 2. + 350., 0.0]);
+    let ortho = glm::ortho(
+        0.0f32,
+        windows_size.0 as f32,
+        0.,
+        windows_size.1 as f32,
+        -10.,
+        100.,
+    );
 
     Clear(COLOR_BUFFER_BIT | DEPTH_BUFFER_BIT);
     Enable(BLEND);
     BlendFunc(SRC_ALPHA, ONE_MINUS_SRC_ALPHA);
-    Viewport(0, 0, windows_size.0.try_into().unwrap(), windows_size.1.try_into().unwrap());
+    Viewport(
+        0,
+        0,
+        windows_size.0.try_into().unwrap(),
+        windows_size.1.try_into().unwrap(),
+    );
     BindVertexArray(app.gl.vao);
     BindBuffer(ELEMENT_ARRAY_BUFFER, app.gl.ebo);
 
@@ -530,61 +547,67 @@ pub unsafe fn render(app: &crate::App, windows_size: &(u32, u32)) {
         let mvp = ortho * view * model;
 
         UseProgram(app.gl.tile_program_id);
-        UniformMatrix4fv(app.gl.tile_program_mvp_loc, 1, FALSE, mvp.data.as_slice().as_ptr());
+        UniformMatrix4fv(
+            app.gl.tile_program_mvp_loc,
+            1,
+            FALSE,
+            mvp.data.as_slice().as_ptr(),
+        );
         Uniform1f(app.gl.tile_program_border_loc, 0.);
         BindTexture(TEXTURE_2D, app.state.background_image.texture_id);
         DrawElements(TRIANGLES, 6, UNSIGNED_INT, 0 as *const c_void);
     }
 
-    /*
-    let mut render_cursor = (0., 0.);
-    for container in &app.containers {
-        {
-            let scale = glm::make_vec3(&[container.title.width as f32, container.title.height as f32, 1.]);
-            let model = glm::scale(&id, &scale);
-            let mve = base_move
-                + glm::make_vec3(&[
-                    app.viewport.pos[0] + (container.title.width as f32 / 2.) - 250.,
-                    app.viewport.pos[1] - render_cursor.1 as f32,
-                    0.,
-                ]);
-            let view = glm::translate(&id, &mve);
-            let mvp = ortho * view * model;
+    // Draw Title
+    {
+        let scale = glm::make_vec3(&[
+            app.state.title_text.width as f32,
+            app.state.title_text.height as f32,
+            1.,
+        ]);
+        let model = glm::scale(&id, &scale);
+        let mve = glm::make_vec3(&[windows_size.0 as f32 / 2., windows_size.1 as f32 / 2., 0.]);
+        let view = glm::translate(&id, &mve);
+        let mvp = ortho * view * model;
 
-            UseProgram(app.gl.text_program_id);
-            UniformMatrix4fv(app.gl.text_program_mvp_loc, 1, FALSE, mvp.data.as_slice().as_ptr());
-            BindTexture(TEXTURE_2D, container.title.texture_id);
-            DrawElements(TRIANGLES, 6, UNSIGNED_INT, 0 as *const c_void);
-
-            render_cursor.1 += app.title_height;
-        }
-
-        render_cursor.0 -= container.selected_tile_idx * app.tile_width;
-        for image in &container.images {
-            {
-                let scale = glm::make_vec3(&[500. * image.scale, 281. * image.scale, 1.0]);
-                let model = glm::scale(&id, &scale);
-                let mve = base_move
-                    + glm::make_vec3(&[
-                        app.viewport.pos[0] + render_cursor.0 as f32,
-                        app.viewport.pos[1] - render_cursor.1 as f32,
-                        0.,
-                    ]);
-                let view = glm::translate(&id, &mve);
-                let mvp = ortho * view * model;
-
-                UseProgram(app.gl.tile_program_id);
-                UniformMatrix4fv(app.gl.tile_program_mvp_loc, 1, FALSE, mvp.data.as_slice().as_ptr());
-                Uniform1f(app.gl.tile_program_border_loc, image.border);
-                BindTexture(TEXTURE_2D, image.texture_id);
-                DrawElements(TRIANGLES, 6, UNSIGNED_INT, 0 as *const c_void);
-                render_cursor.0 += app.tile_width;
-            }
-        }
-        render_cursor.1 += app.row_height;
-        render_cursor.0 = 0.;
+        UseProgram(app.gl.text_program_id);
+        UniformMatrix4fv(
+            app.gl.text_program_mvp_loc,
+            1,
+            FALSE,
+            mvp.data.as_slice().as_ptr(),
+        );
+        BindTexture(TEXTURE_2D, app.state.title_text.texture_id);
+        DrawElements(TRIANGLES, 6, UNSIGNED_INT, 0 as *const c_void);
     }
-    */
+
+    // Draw Remote Image
+    {
+        let scale = glm::make_vec3(&[
+            app.state.remote_image.width as f32,
+            app.state.remote_image.height as f32,
+            1.,
+        ]);
+        let model = glm::scale(&id, &scale);
+        let mve = glm::make_vec3(&[
+            (windows_size.0 / 2) as f32 / 2.,
+            (windows_size.1 / 2) as f32 / 2. - 0.5,
+            0.,
+        ]);
+        let view = glm::translate(&id, &mve);
+        let mvp = ortho * view * model;
+
+        UseProgram(app.gl.tile_program_id);
+        UniformMatrix4fv(
+            app.gl.tile_program_mvp_loc,
+            1,
+            FALSE,
+            mvp.data.as_slice().as_ptr(),
+        );
+        Uniform1f(app.gl.tile_program_border_loc, 0.);
+        BindTexture(TEXTURE_2D, app.state.remote_image.texture_id);
+        DrawElements(TRIANGLES, 6, UNSIGNED_INT, 0 as *const c_void);
+    }
 }
 
 impl Drop for AppGL {
