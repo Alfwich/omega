@@ -11,6 +11,8 @@ extern crate nalgebra_glm as glm;
 
 use std::convert::TryInto;
 
+static PI: f32 =  3.14159265359;
+
 pub struct AppGL {
     pub vao: u32,
     pub vbo: u32,
@@ -588,13 +590,17 @@ pub unsafe fn render(app: &crate::App, windows_size: &(u32, u32)) {
             app.state.remote_image.height as f32,
             1.,
         ]);
-        let model = glm::scale(&id, &scale);
+        
+        let scale_model = glm::scale(&id, &scale);
+        let rotate_vec = glm::make_vec3(&[0., 0., 1.]);
+        let rotate_model = glm::rotate(&id, PI * 2.0 / 8.0, &rotate_vec);
         let mve = glm::make_vec3(&[
             (windows_size.0 / 2) as f32 / 2.,
             (windows_size.1 / 2) as f32 / 2. - 0.5,
             0.,
         ]);
         let view = glm::translate(&id, &mve);
+        let model = rotate_model * scale_model;
         let mvp = ortho * view * model;
 
         UseProgram(app.gl.tile_program_id);
