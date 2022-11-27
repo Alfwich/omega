@@ -10,10 +10,6 @@ extern crate nalgebra_glm as glm;
 
 use std::convert::TryInto;
 
-use crate::core::renderer::renderer::Renderer;
-
-static PI: f32 =  3.14159265359;
-
 pub struct AppGL {
     pub vao: u32,
     pub vbo: u32,
@@ -517,6 +513,7 @@ impl Default for AppGL {
     }
 }
 
+/*
 pub unsafe fn render(app: &crate::App, renderer: &Renderer) {
     let id = renderer.id;
     let ortho = renderer.ortho;
@@ -584,7 +581,7 @@ pub unsafe fn render(app: &crate::App, renderer: &Renderer) {
             app.state.remote_image.height as f32,
             1.,
         ]);
-        
+
         let scale_model = glm::scale(&id, &scale);
         let rotate_vec = glm::make_vec3(&[0., 0., 1.]);
         let rotate_model = glm::rotate(&id, PI * 2.0 / 8.0, &rotate_vec);
@@ -609,6 +606,7 @@ pub unsafe fn render(app: &crate::App, renderer: &Renderer) {
         DrawElements(TRIANGLES, 6, UNSIGNED_INT, 0 as *const c_void);
     }
 }
+*/
 
 impl Drop for AppGL {
     fn drop(&mut self) {
