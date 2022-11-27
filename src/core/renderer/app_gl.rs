@@ -16,7 +16,6 @@ pub struct AppGL {
     pub ebo: u32,
     pub tile_program_id: u32,
     pub tile_program_mvp_loc: i32,
-    pub tile_program_border_loc: i32,
     pub text_program_id: u32,
     pub text_program_mvp_loc: i32,
 }
@@ -490,12 +489,9 @@ impl Default for AppGL {
             upload_buffer_data(vao, vbo, ebo);
 
             let mvp_name = "mvp\0".as_bytes();
-            let border_name = "border\0".as_bytes();
 
             let tile_program_mvp_loc =
                 GetUniformLocation(tile_program_id, mvp_name.as_ptr() as *const i8);
-            let tile_program_border_loc =
-                GetUniformLocation(tile_program_id, border_name.as_ptr() as *const i8);
             let text_program_mvp_loc =
                 GetUniformLocation(text_program_id, mvp_name.as_ptr() as *const i8);
 
@@ -505,7 +501,6 @@ impl Default for AppGL {
                 ebo,
                 tile_program_id,
                 tile_program_mvp_loc,
-                tile_program_border_loc,
                 text_program_id,
                 text_program_mvp_loc,
             }

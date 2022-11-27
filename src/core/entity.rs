@@ -1,14 +1,27 @@
 use crate::core::component::component::Component;
 use crate::core::renderer::renderer::Renderer;
 
-#[derive(Default)]
 pub struct Entity {
+    pub update_fn: fn(&mut Entity, dt: f32),
     pub components: Vec<Box<dyn Component>>,
     pub children: Vec<Entity>,
 }
 
 impl Entity {
+    pub fn new(update: fn(&mut Entity, dt: f32)) -> Self {
+        Entity {
+            update_fn: update,
+            components: Vec::default(),
+            children: Vec::default(),
+        }
+    }
+}
+
+impl Entity {
     pub fn update(&mut self, dt: f32) {
+        
+        (self.update_fn)(self, dt);
+        
         for cmp in &mut self.components {
             cmp.update(dt);
         }

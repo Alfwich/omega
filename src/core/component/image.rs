@@ -8,6 +8,8 @@ extern crate nalgebra_glm as glm;
 
 use crate::core::renderer::app_gl;
 
+use core::any::Any;
+
 #[derive(Default, Debug)]
 pub struct Image {
     pub scale: f32,
@@ -29,6 +31,7 @@ impl Image {
             ..Default::default()
         }
     }
+    
     // TODO: Other methods which encapsalate ctor behavior
 }
 
@@ -43,7 +46,7 @@ impl Component for Image {
 
     fn detached(&self) {}
 
-    fn update(&mut self, dt: f32) {
+    fn update(&mut self, _dt: f32) {
     }
 
     fn render(&self, renderer: &Renderer) {
@@ -64,9 +67,12 @@ impl Component for Image {
                 FALSE,
                 mvp.data.as_slice().as_ptr(),
             );
-            Uniform1f(renderer.gl.tile_program_border_loc, 0.);
             BindTexture(TEXTURE_2D, self.texture_id);
             DrawElements(TRIANGLES, 6, UNSIGNED_INT, 0 as *const c_void);
         }
+    }
+    
+    fn as_any(&mut self) -> &mut dyn Any {
+        self
     }
 }

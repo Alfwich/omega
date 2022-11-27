@@ -13,12 +13,18 @@ mod util;
 use crate::core::entity::Entity;
 use crate::game::state::GameState;
 
-use std::convert::TryInto;
-
-#[derive(Default)]
 pub struct App {
     pub root: Entity,
     pub state: GameState,
+}
+
+impl Default for App {
+    fn default() -> Self {
+        App {
+            root: Entity::new(|_e, _s| {}),
+            state: GameState::default()
+        }
+    }
 }
 
 fn handle_window_events(window: &mut Window) {
@@ -58,7 +64,7 @@ fn pre_render(renderer: &crate::renderer::Renderer) {
 
 fn main() {
     static WINDOW_SIZE: (u32, u32) = (1920, 1080);
-    static WINDOW_FPS: u32 = 200;
+    static WINDOW_FPS: u32 = 1000;
 
     // Creates GL context internally
     let mut window = Window::new(
