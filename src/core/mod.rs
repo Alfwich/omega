@@ -1,2 +1,3 @@
 pub mod entity;
-pub mod image;
+pub mod component;
+pub mod renderer;

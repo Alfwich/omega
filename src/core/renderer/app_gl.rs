@@ -6,10 +6,11 @@ use std::fs::File;
 use std::io::Read;
 
 use gl::*;
-
 extern crate nalgebra_glm as glm;
 
 use std::convert::TryInto;
+
+use crate::core::renderer::renderer::Renderer;
 
 static PI: f32 =  3.14159265359;
 
@@ -516,17 +517,10 @@ impl Default for AppGL {
     }
 }
 
-// TODO: Break out the gl specifics to prevent leaking App constructs
-pub unsafe fn render(app: &crate::App, windows_size: &(u32, u32)) {
-    let id = glm::identity::<f32, 4>();
-    let ortho = glm::ortho(
-        0.0f32,
-        windows_size.0 as f32,
-        0.,
-        windows_size.1 as f32,
-        -10.,
-        100.,
-    );
+pub unsafe fn render(app: &crate::App, renderer: &Renderer) {
+    let id = renderer.id;
+    let ortho = renderer.ortho;
+    let windows_size = (renderer.viewport.window_size.0 as i32, renderer.viewport.window_size.1 as i32);
 
     Clear(COLOR_BUFFER_BIT | DEPTH_BUFFER_BIT);
     Enable(BLEND);
@@ -537,8 +531,8 @@ pub unsafe fn render(app: &crate::App, windows_size: &(u32, u32)) {
         windows_size.0.try_into().unwrap(),
         windows_size.1.try_into().unwrap(),
     );
-    BindVertexArray(app.gl.vao);
-    BindBuffer(ELEMENT_ARRAY_BUFFER, app.gl.ebo);
+    BindVertexArray(renderer.gl.vao);
+    BindBuffer(ELEMENT_ARRAY_BUFFER, renderer.gl.ebo);
 
     // Draw Background
     {
@@ -548,14 +542,14 @@ pub unsafe fn render(app: &crate::App, windows_size: &(u32, u32)) {
         let view = glm::translate(&id, &mve);
         let mvp = ortho * view * model;
 
-        UseProgram(app.gl.tile_program_id);
+        UseProgram(renderer.gl.tile_program_id);
         UniformMatrix4fv(
-            app.gl.tile_program_mvp_loc,
+            renderer.gl.tile_program_mvp_loc,
             1,
             FALSE,
             mvp.data.as_slice().as_ptr(),
         );
-        Uniform1f(app.gl.tile_program_border_loc, 0.);
+        Uniform1f(renderer.gl.tile_program_border_loc, 0.);
         BindTexture(TEXTURE_2D, app.state.background_image.texture_id);
         DrawElements(TRIANGLES, 6, UNSIGNED_INT, 0 as *const c_void);
     }
@@ -572,9 +566,9 @@ pub unsafe fn render(app: &crate::App, windows_size: &(u32, u32)) {
         let view = glm::translate(&id, &mve);
         let mvp = ortho * view * model;
 
-        UseProgram(app.gl.text_program_id);
+        UseProgram(renderer.gl.text_program_id);
         UniformMatrix4fv(
-            app.gl.text_program_mvp_loc,
+            renderer.gl.text_program_mvp_loc,
             1,
             FALSE,
             mvp.data.as_slice().as_ptr(),
@@ -603,14 +597,14 @@ pub unsafe fn render(app: &crate::App, windows_size: &(u32, u32)) {
         let model = rotate_model * scale_model;
         let mvp = ortho * view * model;
 
-        UseProgram(app.gl.tile_program_id);
+        UseProgram(renderer.gl.tile_program_id);
         UniformMatrix4fv(
-            app.gl.tile_program_mvp_loc,
+            renderer.gl.tile_program_mvp_loc,
             1,
             FALSE,
             mvp.data.as_slice().as_ptr(),
         );
-        Uniform1f(app.gl.tile_program_border_loc, 0.);
+        Uniform1f(renderer.gl.tile_program_border_loc, 0.);
         BindTexture(TEXTURE_2D, app.state.remote_image.texture_id);
         DrawElements(TRIANGLES, 6, UNSIGNED_INT, 0 as *const c_void);
     }

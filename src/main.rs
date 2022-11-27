@@ -3,7 +3,8 @@ use sfml::window::{Event, Key, Style, Window};
 extern crate nalgebra_glm as glm;
 extern crate sfml;
 
-mod app_gl;
+use crate::core::renderer::*;
+
 mod core;
 mod game;
 mod util;
@@ -11,21 +12,8 @@ mod util;
 use crate::core::entity::Entity;
 use crate::game::state::GameState;
 
-#[derive(Debug)]
-pub struct Viewport {
-    pos: [f32; 2],
-}
-
-impl Default for Viewport {
-    fn default() -> Self {
-        Viewport { pos: [0., 0.] }
-    }
-}
-
 #[derive(Default)]
 pub struct App {
-    gl: app_gl::AppGL,
-    pub viewport: Viewport,
     pub root: Entity,
     pub state: GameState,
 }
@@ -64,6 +52,7 @@ fn main() {
     );
     window.set_framerate_limit(WINDOW_FPS);
 
+    let renderer = crate::core::renderer::renderer::Renderer::new(WINDOW_SIZE.0 as f32, WINDOW_SIZE.1 as f32);
     let mut app = App::default();
     let mut frame_timer = util::Timer::default();
 
@@ -77,7 +66,7 @@ fn main() {
         window.set_active(true);
 
         unsafe {
-            app_gl::render(&app, &WINDOW_SIZE);
+            app_gl::render(&app, &renderer);
         }
 
         window.display();

@@ -1,5 +1,5 @@
 use crate::app_gl;
-use crate::core::image::Image;
+use crate::core::component::image::Image;
 
 #[derive(Debug)]
 pub struct GameState {
