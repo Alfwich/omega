@@ -33,7 +33,7 @@ impl Image {
             ..Default::default()
         }
     }
-    
+
     // TODO: Other methods which encapsalate ctor behavior
 }
 
@@ -47,7 +47,7 @@ impl Component for Image {
     fn get_name(&self) -> &str {
         &self.name
     }
-    
+
     fn attached(&self) {}
 
     fn detached(&self) {}
@@ -57,7 +57,11 @@ impl Component for Image {
         let scale_model = glm::scale(&renderer.id, &scale);
         let rotate_vec = glm::make_vec3(&[0., 0., 1.]);
         let rotate_model = glm::rotate(&renderer.id, self.rotation, &rotate_vec);
-        let mve = glm::make_vec3(&[renderer.viewport.window_size.0 as f32 / 2. + self.x as f32, renderer.viewport.window_size.1 as f32 / 2. + self.y as f32, 0.]);
+        let mve = glm::make_vec3(&[
+            renderer.viewport.window_size.0 as f32 / 2. + self.x as f32,
+            renderer.viewport.window_size.1 as f32 / 2. + self.y as f32,
+            0.,
+        ]);
         let view = glm::translate(&renderer.id, &mve);
         let model = rotate_model * scale_model;
         let mvp = renderer.ortho * view * model;
@@ -74,7 +78,7 @@ impl Component for Image {
             DrawElements(TRIANGLES, 6, UNSIGNED_INT, 0 as *const c_void);
         }
     }
-    
+
     fn as_any(&mut self) -> &mut dyn Any {
         self
     }

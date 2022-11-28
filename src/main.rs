@@ -1,5 +1,5 @@
-use sfml::window::{Event, Key, Style, Window};
 use gl::*;
+use sfml::window::{Event, Key, Style, Window};
 
 extern crate nalgebra_glm as glm;
 extern crate sfml;
@@ -22,7 +22,7 @@ impl Default for App {
     fn default() -> Self {
         App {
             root: Entity::new("root", |_e, _d| {}),
-            state: GameState::default()
+            state: GameState::default(),
         }
     }
 }
@@ -79,8 +79,10 @@ fn main() {
         crate::core::renderer::renderer::Renderer::new(WINDOW_SIZE.0 as f32, WINDOW_SIZE.1 as f32);
     let mut app = App::default();
     let mut frame_timer = util::Timer::default();
-    
-    app.root.children.push(crate::game::entities::title::make_title());
+
+    app.root
+        .children
+        .push(crate::game::entities::title::make_title());
 
     while window.is_open() {
         let dt = frame_timer.dt();

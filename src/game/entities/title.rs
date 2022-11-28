@@ -1,7 +1,7 @@
-use crate::Entity;
-use crate::core::renderer::app_gl;
 use crate::core::component::image::Image;
 use crate::core::component::text::Text;
+use crate::core::renderer::app_gl;
+use crate::Entity;
 
 pub fn make_title() -> Entity {
     let mut e = Entity::new("title", |e, d| {
@@ -17,4 +17,3 @@ pub fn make_title() -> Entity {
     e.components.push(Box::new(text));
     return e;
 }
-

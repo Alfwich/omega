@@ -20,40 +20,38 @@ impl Entity {
 
     pub fn find_component<T: Component + 'static>(&mut self, name: &str) -> Result<&mut T, String> {
         match self.find_component_by_name(name)?.as_any().downcast_mut() {
-            Some(typed_cmp) => {
-                Ok(typed_cmp)
-            }
-            None => {
-                Err(format!("Could not find component with name: {}", name))
-            }
+            Some(typed_cmp) => Ok(typed_cmp),
+            None => Err(format!("Could not find component with name: {}", name)),
         }
     }
 
-    pub fn find_component_by_name(&mut self, name: &str) -> Result<&mut Box<dyn Component>, String> {
+    pub fn find_component_by_name(
+        &mut self,
+        name: &str,
+    ) -> Result<&mut Box<dyn Component>, String> {
         for cmp in &mut self.components {
             let component = &*cmp;
             if component.get_name() == name {
                 return Ok(cmp);
             }
         }
-        
+
         Err(format!("Could not find component with name: {}", name))
     }
-    
+
     pub fn find_child_by_name(&mut self, name: &str) -> Result<&mut Entity, String> {
         for child in &mut self.children {
             if child.name == name {
                 return Ok(child);
             }
         }
-        
+
         Err(format!("Could not find child with name: {}", name))
     }
-    
+
     pub fn update(&mut self, dt: f32) {
-        
         (self.update_fn)(self, dt);
-        
+
         for ent in &mut self.children {
             ent.update(dt);
         }

@@ -2,8 +2,7 @@ use crate::app_gl;
 use crate::core::component::image::Image;
 
 #[derive(Debug)]
-pub struct GameState {
-}
+pub struct GameState {}
 
 impl Default for GameState {
     fn default() -> Self {
@@ -18,7 +17,6 @@ impl Default for GameState {
         .unwrap();
         */
 
-        GameState {
-        }
+        GameState {}
     }
 }
