@@ -21,7 +21,7 @@ pub struct App {
 impl Default for App {
     fn default() -> Self {
         App {
-            root: Entity::new(|_e, _s| {}),
+            root: Entity::new("root", |_e, _d| {}),
             state: GameState::default()
         }
     }

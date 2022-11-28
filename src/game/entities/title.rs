@@ -1,14 +1,20 @@
 use crate::Entity;
 use crate::core::renderer::app_gl;
+use crate::core::component::image::Image;
+use crate::core::component::text::Text;
 
 pub fn make_title() -> Entity {
-    let mut e = Entity::new(|e, d| {
-        let img : &mut crate::core::component::image::Image = e.components[0].as_any().downcast_mut().unwrap();
+    let mut e = Entity::new("title", |e, d| {
+        let img = e.find_component::<Image>("background").unwrap();
         img.rotation += d;
+        let title = e.find_component::<Text>("title").unwrap();
+        title.rotation -= d;
     });
     let texture_id = app_gl::load_image_from_disk("res/img/background.png", 1440, 1070).unwrap();
-    let image = crate::core::component::image::Image::new(texture_id, 1440, 1070);
+    let image = Image::new("background", texture_id, 1920, 1080);
     e.components.push(Box::new(image));
+    let text = Text::new("title", "Omega Survival");
+    e.components.push(Box::new(text));
     return e;
 }
 

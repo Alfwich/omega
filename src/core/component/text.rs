@@ -11,10 +11,9 @@ use crate::core::renderer::app_gl;
 use core::any::Any;
 
 #[derive(Default, Debug)]
-pub struct Image {
+pub struct Text {
     pub name: String,
-    pub scale: f32,
-    pub border: f32,
+    pub text: String,
     pub texture_id: u32,
     pub x: u32,
     pub y: u32,
@@ -23,27 +22,27 @@ pub struct Image {
     pub height: u32,
 }
 
-impl Image {
-    pub fn new(name: &str, texture_id: u32, width: u32, height: u32) -> Self {
-        Image {
+impl Text {
+    pub fn new(name: &str, text: &str) -> Self {
+        let title_text = app_gl::render_text_to_texture("Omega Survival").unwrap();
+        Text {
             name: name.to_string(),
-            texture_id,
-            width,
-            height,
+            text: text.to_string(),
+            texture_id: title_text.texture_id,
+            width: title_text.width,
+            height: title_text.height,
             ..Default::default()
         }
     }
-    
-    // TODO: Other methods which encapsalate ctor behavior
 }
 
-impl Drop for Image {
+impl Drop for Text {
     fn drop(&mut self) {
         app_gl::release_texture(self.texture_id);
     }
 }
 
-impl Component for Image {
+impl Component for Text {
     fn get_name(&self) -> &str {
         &self.name
     }
@@ -63,9 +62,9 @@ impl Component for Image {
         let mvp = renderer.ortho * view * model;
 
         unsafe {
-            UseProgram(renderer.gl.tile_program_id);
+            UseProgram(renderer.gl.text_program_id);
             UniformMatrix4fv(
-                renderer.gl.tile_program_mvp_loc,
+                renderer.gl.text_program_mvp_loc,
                 1,
                 FALSE,
                 mvp.data.as_slice().as_ptr(),
