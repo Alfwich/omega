@@ -1,32 +1,63 @@
+use crate::core::component::component::Component;
 use crate::core::component::image::Image;
 use crate::core::component::text::Text;
 use crate::core::renderer::app_gl;
+use crate::core::renderer::renderer::Renderer;
+use crate::core::renderer::renderer::Viewport;
 use crate::Entity;
 
 use sfml::window::{Event, Key};
 
+use core::any::Any;
+
+#[derive(Default, Debug)]
+struct Data {
+    counter: f32,
+}
+
+impl Component for Data {
+    fn get_name(&self) -> &str {
+        return "data";
+    }
+
+    fn render(&self, _renderer: &Renderer) {}
+
+    fn as_any(&mut self) -> &mut dyn Any {
+        self
+    }
+}
+
 fn update_title(e: &mut Entity, dt: f32) {
+    let data = e.find_component::<Data>("data").unwrap();
+    data.counter += dt;
+    let counter_sin = data.counter.sin();
+
     let img = e.find_component::<Image>("background").unwrap();
-    img.rotation += dt;
+    img.rotation = counter_sin;
+
     let title = e.find_component::<Text>("title").unwrap();
     title.rotation -= dt;
 }
 
 fn handle_event(e: &mut Entity, ev: &Event) {
-    let title = e.find_component::<Text>("title").unwrap();
+    let card = e.find_component::<Image>("card").unwrap();
     match ev {
+        Event::MouseMoved { x, y } => {
+            card.x = *x;
+            card.y = *y;
+        }
         Event::KeyPressed { code, .. } => match code {
             &Key::W => {
-                title.y += 10;
+                card.y += 10;
             }
             &Key::A => {
-                title.x -= 10;
+                card.x -= 10;
             }
             &Key::S => {
-                title.y -= 10;
+                card.y -= 10;
             }
             &Key::D => {
-                title.x += 10;
+                card.x += 10;
             }
             _ => {}
         },
@@ -34,12 +65,28 @@ fn handle_event(e: &mut Entity, ev: &Event) {
     }
 }
 
-pub fn make_title() -> Entity {
+pub fn make_title(viewport: &Viewport) -> Entity {
     let mut e = Entity::new("title", update_title, handle_event);
 
+    let d = Data::default();
+    e.components.push(Box::new(d));
+
+    let client = reqwest::blocking::Client::new();
+    let remote_image_id = app_gl::load_image_from_url(
+        &client,
+        "http://wuteri.ch/misc/visualguider/image/card/Teleport.jpg",
+    )
+    .unwrap();
+
     let texture_id = app_gl::load_image_from_disk("res/img/background.png", 1440, 1070).unwrap();
-    let image = Image::new("background", texture_id, 1920, 1080);
+    let mut image = Image::new("background", texture_id, 1920, 1080);
+    image.x = (viewport.window_size.0 / 2.) as i32;
+    image.y = (viewport.window_size.1 / 2.) as i32;
     e.components.push(Box::new(image));
+
+    let card_image = Image::new("card", remote_image_id, 220, 310);
+    e.components.push(Box::new(card_image));
+
     let text = Text::new("title", "Omega Survival");
     e.components.push(Box::new(text));
 

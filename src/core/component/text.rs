@@ -53,8 +53,8 @@ impl Component for Text {
         let rotate_vec = glm::make_vec3(&[0., 0., 1.]);
         let rotate_model = glm::rotate(&renderer.id, self.rotation, &rotate_vec);
         let mve = glm::make_vec3(&[
-            renderer.viewport.window_size.0 as f32 / 2. + self.x as f32,
-            renderer.viewport.window_size.1 as f32 / 2. + self.y as f32,
+            self.x as f32,
+            renderer.viewport.window_size.1 - self.y as f32,
             0.,
         ]);
         let view = glm::translate(&renderer.id, &mve);

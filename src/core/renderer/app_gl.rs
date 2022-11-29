@@ -14,8 +14,8 @@ pub struct AppGL {
     pub vao: u32,
     pub vbo: u32,
     pub ebo: u32,
-    pub tile_program_id: u32,
-    pub tile_program_mvp_loc: i32,
+    pub image_program_id: u32,
+    pub image_program_mvp_loc: i32,
     pub text_program_id: u32,
     pub text_program_mvp_loc: i32,
 }
@@ -481,7 +481,7 @@ impl Default for AppGL {
             let vao = gen_vertex_buffer();
             let vbo = gen_buffer();
             let ebo = gen_buffer();
-            let tile_program_id =
+            let image_program_id =
                 create_and_link_program("res/glsl/tilev.glsl", "res/glsl/tile.glsl");
             let text_program_id =
                 create_and_link_program("res/glsl/textv.glsl", "res/glsl/text.glsl");
@@ -490,8 +490,8 @@ impl Default for AppGL {
 
             let mvp_name = "mvp\0".as_bytes();
 
-            let tile_program_mvp_loc =
-                GetUniformLocation(tile_program_id, mvp_name.as_ptr() as *const i8);
+            let image_program_mvp_loc =
+                GetUniformLocation(image_program_id, mvp_name.as_ptr() as *const i8);
             let text_program_mvp_loc =
                 GetUniformLocation(text_program_id, mvp_name.as_ptr() as *const i8);
 
@@ -499,8 +499,8 @@ impl Default for AppGL {
                 vao,
                 vbo,
                 ebo,
-                tile_program_id,
-                tile_program_mvp_loc,
+                image_program_id,
+                image_program_mvp_loc,
                 text_program_id,
                 text_program_mvp_loc,
             }
@@ -508,108 +508,13 @@ impl Default for AppGL {
     }
 }
 
-/*
-pub unsafe fn render(app: &crate::App, renderer: &Renderer) {
-    let id = renderer.id;
-    let ortho = renderer.ortho;
-    let windows_size = (renderer.viewport.window_size.0 as i32, renderer.viewport.window_size.1 as i32);
-
-    Clear(COLOR_BUFFER_BIT | DEPTH_BUFFER_BIT);
-    Enable(BLEND);
-    BlendFunc(SRC_ALPHA, ONE_MINUS_SRC_ALPHA);
-    Viewport(
-        0,
-        0,
-        windows_size.0.try_into().unwrap(),
-        windows_size.1.try_into().unwrap(),
-    );
-    BindVertexArray(renderer.gl.vao);
-    BindBuffer(ELEMENT_ARRAY_BUFFER, renderer.gl.ebo);
-
-    // Draw Background
-    {
-        let scale = glm::make_vec3(&[windows_size.0 as f32, windows_size.1 as f32, 1.]);
-        let model = glm::scale(&id, &scale);
-        let mve = glm::make_vec3(&[windows_size.0 as f32 / 2., windows_size.1 as f32 / 2., 0.]);
-        let view = glm::translate(&id, &mve);
-        let mvp = ortho * view * model;
-
-        UseProgram(renderer.gl.tile_program_id);
-        UniformMatrix4fv(
-            renderer.gl.tile_program_mvp_loc,
-            1,
-            FALSE,
-            mvp.data.as_slice().as_ptr(),
-        );
-        Uniform1f(renderer.gl.tile_program_border_loc, 0.);
-        BindTexture(TEXTURE_2D, app.state.background_image.texture_id);
-        DrawElements(TRIANGLES, 6, UNSIGNED_INT, 0 as *const c_void);
-    }
-
-    // Draw Title
-    {
-        let scale = glm::make_vec3(&[
-            app.state.title_text.width as f32,
-            app.state.title_text.height as f32,
-            1.,
-        ]);
-        let model = glm::scale(&id, &scale);
-        let mve = glm::make_vec3(&[windows_size.0 as f32 / 2., windows_size.1 as f32 / 2., 0.]);
-        let view = glm::translate(&id, &mve);
-        let mvp = ortho * view * model;
-
-        UseProgram(renderer.gl.text_program_id);
-        UniformMatrix4fv(
-            renderer.gl.text_program_mvp_loc,
-            1,
-            FALSE,
-            mvp.data.as_slice().as_ptr(),
-        );
-        BindTexture(TEXTURE_2D, app.state.title_text.texture_id);
-        DrawElements(TRIANGLES, 6, UNSIGNED_INT, 0 as *const c_void);
-    }
-
-    // Draw Remote Image
-    {
-        let scale = glm::make_vec3(&[
-            app.state.remote_image.width as f32,
-            app.state.remote_image.height as f32,
-            1.,
-        ]);
-
-        let scale_model = glm::scale(&id, &scale);
-        let rotate_vec = glm::make_vec3(&[0., 0., 1.]);
-        let rotate_model = glm::rotate(&id, PI * 2.0 / 8.0, &rotate_vec);
-        let mve = glm::make_vec3(&[
-            (windows_size.0 / 2) as f32 / 2.,
-            (windows_size.1 / 2) as f32 / 2. - 0.5,
-            0.,
-        ]);
-        let view = glm::translate(&id, &mve);
-        let model = rotate_model * scale_model;
-        let mvp = ortho * view * model;
-
-        UseProgram(renderer.gl.tile_program_id);
-        UniformMatrix4fv(
-            renderer.gl.tile_program_mvp_loc,
-            1,
-            FALSE,
-            mvp.data.as_slice().as_ptr(),
-        );
-        Uniform1f(renderer.gl.tile_program_border_loc, 0.);
-        BindTexture(TEXTURE_2D, app.state.remote_image.texture_id);
-        DrawElements(TRIANGLES, 6, UNSIGNED_INT, 0 as *const c_void);
-    }
-}
-*/
-
 impl Drop for AppGL {
     fn drop(&mut self) {
         unsafe {
             DeleteBuffers(1, &self.ebo);
             DeleteBuffers(1, &self.vbo);
             DeleteVertexArrays(1, &self.vao);
-            DeleteProgram(self.tile_program_id);
+            DeleteProgram(self.image_program_id);
             DeleteProgram(self.text_program_id);
             gl_loader::end_gl();
         }

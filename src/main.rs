@@ -69,7 +69,7 @@ fn main() {
     app.root.components.push(Box::new(ScreenClear::new("cls")));
     app.root
         .children
-        .push(crate::game::entities::title::make_title());
+        .push(crate::game::entities::title::make_title(&renderer.viewport));
 
     while window.is_open() {
         let dt = frame_timer.dt();

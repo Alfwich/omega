@@ -54,8 +54,8 @@ impl Component for Image {
         let rotate_vec = glm::make_vec3(&[0., 0., 1.]);
         let rotate_model = glm::rotate(&renderer.id, self.rotation, &rotate_vec);
         let mve = glm::make_vec3(&[
-            renderer.viewport.window_size.0 as f32 / 2. + self.x as f32,
-            renderer.viewport.window_size.1 as f32 / 2. + self.y as f32,
+            self.x as f32,
+            renderer.viewport.window_size.1 - self.y as f32,
             0.,
         ]);
         let view = glm::translate(&renderer.id, &mve);
@@ -63,9 +63,9 @@ impl Component for Image {
         let mvp = renderer.ortho * view * model;
 
         unsafe {
-            UseProgram(renderer.gl.tile_program_id);
+            UseProgram(renderer.gl.image_program_id);
             UniformMatrix4fv(
-                renderer.gl.tile_program_mvp_loc,
+                renderer.gl.image_program_mvp_loc,
                 1,
                 FALSE,
                 mvp.data.as_slice().as_ptr(),
