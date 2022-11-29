@@ -7,7 +7,7 @@ mod core;
 mod game;
 mod util;
 
-use crate::core::component::screen_clear::ScreenClear;
+use crate::core::component::pre_frame::PreFrame;
 use crate::core::entity::Entity;
 use crate::game::state::GameState;
 
@@ -50,7 +50,6 @@ fn update(app: &mut App, dt: f32) {
 
 fn main() {
     static WINDOW_SIZE: (u32, u32) = (1920, 1080);
-    static WINDOW_FPS: u32 = 1000;
 
     // Creates GL context internally
     let mut window = Window::new(
@@ -59,14 +58,15 @@ fn main() {
         Style::CLOSE,
         &Default::default(),
     );
-    window.set_framerate_limit(WINDOW_FPS);
+    window.set_framerate_limit(0);
+    window.set_vertical_sync_enabled(false);
 
     let renderer =
         crate::core::renderer::renderer::Renderer::new(WINDOW_SIZE.0 as f32, WINDOW_SIZE.1 as f32);
     let mut app = App::default();
     let mut frame_timer = util::Timer::default();
 
-    app.root.components.push(Box::new(ScreenClear::new("cls")));
+    app.root.components.push(Box::new(PreFrame::default()));
     app.root
         .children
         .push(crate::game::entities::title::make_title(&renderer.viewport));

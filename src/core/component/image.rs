@@ -63,6 +63,10 @@ impl Component for Image {
         let mvp = renderer.ortho * view * model;
 
         unsafe {
+            Enable(BLEND);
+            BlendFunc(SRC_ALPHA, ONE_MINUS_SRC_ALPHA);
+            BindVertexArray(renderer.gl.vao);
+            BindBuffer(ELEMENT_ARRAY_BUFFER, renderer.gl.ebo);
             UseProgram(renderer.gl.image_program_id);
             UniformMatrix4fv(
                 renderer.gl.image_program_mvp_loc,

@@ -10,7 +10,7 @@ use sfml::window::{Event, Key};
 
 use core::any::Any;
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Clone, Copy)]
 struct Data {
     counter: f32,
 }
@@ -28,15 +28,22 @@ impl Component for Data {
 }
 
 fn update_title(e: &mut Entity, dt: f32) {
-    let data = e.find_component::<Data>("data").unwrap();
-    data.counter += dt;
-    let counter_sin = data.counter.sin();
+    let d;
+    {
+        let data = e.find_component::<Data>("data").unwrap();
+        data.counter += dt;
+        d = data.clone();
+    }
 
-    let img = e.find_component::<Image>("background").unwrap();
-    img.rotation = counter_sin;
+    {
+        let img = e.find_component::<Image>("background").unwrap();
+        img.rotation = d.counter.sin();
+    }
 
-    let title = e.find_component::<Text>("title").unwrap();
-    title.rotation -= dt;
+    {
+        let title = e.find_component::<Text>("title").unwrap();
+        title.rotation -= dt;
+    }
 }
 
 fn handle_event(e: &mut Entity, ev: &Event) {
@@ -48,13 +55,13 @@ fn handle_event(e: &mut Entity, ev: &Event) {
         }
         Event::KeyPressed { code, .. } => match code {
             &Key::W => {
-                card.y += 10;
+                card.y -= 10;
             }
             &Key::A => {
                 card.x -= 10;
             }
             &Key::S => {
-                card.y -= 10;
+                card.y += 10;
             }
             &Key::D => {
                 card.x += 10;
@@ -87,7 +94,9 @@ pub fn make_title(viewport: &Viewport) -> Entity {
     let card_image = Image::new("card", remote_image_id, 220, 310);
     e.components.push(Box::new(card_image));
 
-    let text = Text::new("title", "Omega Survival");
+    let mut text = Text::new("title", "Omega Survival");
+    text.x = (viewport.window_size.0 / 2.) as i32;
+    text.y = (viewport.window_size.1 / 2.) as i32;
     e.components.push(Box::new(text));
 
     return e;
