@@ -1,15 +1,13 @@
-use gl::*;
 use sfml::window::{Event, Key, Style, Window};
 
 extern crate nalgebra_glm as glm;
 extern crate sfml;
 
-use crate::core::renderer::*;
-
 mod core;
 mod game;
 mod util;
 
+use crate::core::component::screen_clear::ScreenClear;
 use crate::core::entity::Entity;
 use crate::game::state::GameState;
 
@@ -21,13 +19,13 @@ pub struct App {
 impl Default for App {
     fn default() -> Self {
         App {
-            root: Entity::new("root", |_e, _d| {}),
+            root: Entity::new_noop("root"),
             state: GameState::default(),
         }
     }
 }
 
-fn handle_window_events(window: &mut Window) {
+fn handle_window_events(window: &mut Window, app: &mut App) {
     while let Some(event) = window.poll_event() {
         match event {
             Event::Closed => {
@@ -41,25 +39,13 @@ fn handle_window_events(window: &mut Window) {
             },
             _ => {}
         }
+
+        app.root.handle_event(&event);
     }
 }
 
-fn update(_app: &mut App, _dt: f32) {}
-
-fn pre_render(renderer: &crate::renderer::Renderer) {
-    unsafe {
-        Clear(COLOR_BUFFER_BIT | DEPTH_BUFFER_BIT);
-        Enable(BLEND);
-        BlendFunc(SRC_ALPHA, ONE_MINUS_SRC_ALPHA);
-        Viewport(
-            0,
-            0,
-            renderer.viewport.window_size.0 as i32,
-            renderer.viewport.window_size.1 as i32,
-        );
-        BindVertexArray(renderer.gl.vao);
-        BindBuffer(ELEMENT_ARRAY_BUFFER, renderer.gl.ebo);
-    }
+fn update(app: &mut App, dt: f32) {
+    app.root.update(dt);
 }
 
 fn main() {
@@ -80,6 +66,7 @@ fn main() {
     let mut app = App::default();
     let mut frame_timer = util::Timer::default();
 
+    app.root.components.push(Box::new(ScreenClear::new("cls")));
     app.root
         .children
         .push(crate::game::entities::title::make_title());
@@ -87,14 +74,12 @@ fn main() {
     while window.is_open() {
         let dt = frame_timer.dt();
 
-        handle_window_events(&mut window);
+        handle_window_events(&mut window, &mut app);
 
         update(&mut app, dt);
-        app.root.update(dt);
 
         window.set_active(true);
 
-        pre_render(&renderer);
         app.root.render(&renderer);
 
         window.display();

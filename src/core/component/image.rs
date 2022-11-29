@@ -16,8 +16,8 @@ pub struct Image {
     pub scale: f32,
     pub border: f32,
     pub texture_id: u32,
-    pub x: u32,
-    pub y: u32,
+    pub x: i32,
+    pub y: i32,
     pub rotation: f32,
     pub width: u32,
     pub height: u32,
@@ -47,10 +47,6 @@ impl Component for Image {
     fn get_name(&self) -> &str {
         &self.name
     }
-
-    fn attached(&self) {}
-
-    fn detached(&self) {}
 
     fn render(&self, renderer: &Renderer) {
         let scale = glm::make_vec3(&[self.width as f32, self.height as f32, 1.]);
