@@ -1,15 +1,5 @@
 use std::time::Instant;
 
-pub fn clamp<T: std::cmp::PartialOrd>(x: T, min: T, max: T) -> T {
-    if x < min {
-        min
-    } else if x > max {
-        max
-    } else {
-        x
-    }
-}
-
 pub struct Timer {
     pub last: std::time::Instant,
 }
@@ -30,3 +20,4 @@ impl Timer {
         dt
     }
 }
+

@@ -10,6 +10,8 @@ extern crate nalgebra_glm as glm;
 
 use std::convert::TryInto;
 
+use crate::util::util::clamp;
+
 pub struct AppGL {
     pub vao: u32,
     pub vbo: u32,
@@ -195,13 +197,13 @@ fn sw_blit_to_buffer(
             let val = src[x as usize + ((y * size.0) as usize)] as i32;
             let existing = dst.rows.get_mut(&y_dst_pos).unwrap()[x_pos] as i32;
             dst.rows.get_mut(&y_dst_pos).unwrap()[x_pos] =
-                crate::util::clamp(val + existing, 0, 255) as u8;
+                clamp(val + existing, 0, 255) as u8;
         }
     }
 }
 
 fn sw_render_text_to_buffer(str: &str, data: &mut TextTextureData) {
-    static FONT_FILE: &str = "GlacialIndifference-Bold.otf";
+    static FONT_FILE: &str = "res/font/GlacialIndifference-Bold.otf";
     let lib = freetype::Library::init().unwrap();
     let face = lib.new_face(FONT_FILE, 0).unwrap();
     face.set_char_size(80 * 32, 0, 100, 0)

@@ -11,6 +11,7 @@ use crate::core::audio::sound::Sound;
 use crate::core::component::pre_frame::PreFrame;
 use crate::core::entity::Entity;
 use crate::game::state::GameState;
+use crate::util::timer::Timer;
 
 pub struct App {
     pub root: Entity,
@@ -64,7 +65,7 @@ fn main() {
 
     let renderer =
         crate::core::renderer::renderer::Renderer::new(WINDOW_SIZE.0 as f32, WINDOW_SIZE.1 as f32);
-    let mut frame_timer = util::Timer::default();
+    let mut frame_timer = Timer::default();
     let mut app = App::default();
 
     {
