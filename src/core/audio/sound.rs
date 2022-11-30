@@ -3,29 +3,21 @@ use sfml::audio::{Sound as SFMLSound, SoundBuffer};
 pub struct Sound {
     name: String,
     sound_buffer: sfml::SfBox<SoundBuffer>,
-    pub sound: Option<SFMLSound>,
+    sound: Option<SFMLSound>,
 }
 
 impl Sound {
     pub fn new(name: &str, sound_file: &str) -> Self {
-        Sound {
+        let mut result = Sound {
             name: name.to_string(),
             sound_buffer: SoundBuffer::from_file(sound_file).unwrap(),
             sound: None,
-        }
+        };
+        result.sound = Some(SFMLSound::new(&result.sound_buffer));
+        return result;
     }
 
-    pub fn play(&mut self) {
-        match &self.sound {
-            None => self.sound = Some(SFMLSound::new(&self.sound_buffer)),
-            _ => {}
-        }
-
-        match &mut self.sound {
-            Some(sound) => {
-                sound.play();
-            }
-            _ => {}
-        }
+    pub fn get_sound(&mut self) -> &mut SFMLSound {
+        self.sound.as_mut().unwrap()
     }
 }

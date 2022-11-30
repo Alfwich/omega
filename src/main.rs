@@ -54,12 +54,7 @@ fn main() {
     static WINDOW_SIZE: (u32, u32) = (1920, 1080);
 
     // Creates GL context internally
-    let mut window = Window::new(
-        WINDOW_SIZE,
-        "Omega Survival",
-        Style::CLOSE,
-        &Default::default(),
-    );
+    let mut window = Window::new(WINDOW_SIZE, "Omega", Style::CLOSE, &Default::default());
     window.set_framerate_limit(0);
     window.set_vertical_sync_enabled(false);
 
@@ -76,15 +71,11 @@ fn main() {
             .children
             .push(crate::game::entities::title::make_title(&renderer.viewport));
 
-        let mut i = 0.;
         while window.is_open() {
             let dt = frame_timer.dt();
 
-            if i > 1. {
-                beep.play();
-                i = 0.
-            } else {
-                i += dt;
+            if beep.get_sound().status() == sfml::audio::SoundStatus::STOPPED {
+                beep.get_sound().play();
             }
 
             handle_window_events(&mut window, &mut app);

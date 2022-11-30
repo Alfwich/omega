@@ -94,7 +94,7 @@ pub fn make_title(viewport: &Viewport) -> Entity {
     let card_image = Image::new("card", remote_image_id, 220, 310);
     e.components.push(Box::new(card_image));
 
-    let mut text = Text::new("title", "Omega Survival");
+    let mut text = Text::new("title", "Omega Ω");
     text.x = (viewport.window_size.0 / 2.) as i32;
     text.y = (viewport.window_size.1 / 2.) as i32;
     e.components.push(Box::new(text));

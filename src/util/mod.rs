@@ -1,2 +1,2 @@
-pub mod util;
 pub mod timer;
+pub mod util;

@@ -196,8 +196,7 @@ fn sw_blit_to_buffer(
 
             let val = src[x as usize + ((y * size.0) as usize)] as i32;
             let existing = dst.rows.get_mut(&y_dst_pos).unwrap()[x_pos] as i32;
-            dst.rows.get_mut(&y_dst_pos).unwrap()[x_pos] =
-                clamp(val + existing, 0, 255) as u8;
+            dst.rows.get_mut(&y_dst_pos).unwrap()[x_pos] = clamp(val + existing, 0, 255) as u8;
         }
     }
 }
