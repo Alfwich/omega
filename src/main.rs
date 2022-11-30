@@ -7,6 +7,7 @@ mod core;
 mod game;
 mod util;
 
+use crate::core::audio::sound::Sound;
 use crate::core::component::pre_frame::PreFrame;
 use crate::core::entity::Entity;
 use crate::game::state::GameState;
@@ -63,25 +64,37 @@ fn main() {
 
     let renderer =
         crate::core::renderer::renderer::Renderer::new(WINDOW_SIZE.0 as f32, WINDOW_SIZE.1 as f32);
-    let mut app = App::default();
     let mut frame_timer = util::Timer::default();
+    let mut app = App::default();
 
-    app.root.components.push(Box::new(PreFrame::default()));
-    app.root
-        .children
-        .push(crate::game::entities::title::make_title(&renderer.viewport));
+    {
+        let mut beep = Sound::new("beep", "res/snd/beep.wav");
 
-    while window.is_open() {
-        let dt = frame_timer.dt();
+        app.root.components.push(Box::new(PreFrame::default()));
+        app.root
+            .children
+            .push(crate::game::entities::title::make_title(&renderer.viewport));
 
-        handle_window_events(&mut window, &mut app);
+        let mut i = 0.;
+        while window.is_open() {
+            let dt = frame_timer.dt();
 
-        update(&mut app, dt);
+            if i > 1. {
+                beep.play();
+                i = 0.
+            } else {
+                i += dt;
+            }
 
-        window.set_active(true);
+            handle_window_events(&mut window, &mut app);
 
-        app.root.render(&renderer);
+            update(&mut app, dt);
 
-        window.display();
+            window.set_active(true);
+
+            app.root.render(&renderer);
+
+            window.display();
+        }
     }
 }

@@ -1,8 +1,4 @@
-#[derive(Debug)]
+#[derive(Default, Debug)]
 pub struct GameState {}
 
-impl Default for GameState {
-    fn default() -> Self {
-        GameState {}
-    }
-}
+impl GameState {}
