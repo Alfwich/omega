@@ -1,0 +1,135 @@
+[package]
+name = "sfml"
+description = "Rust binding for sfml"
+version = "0.19.0"
+authors = ["Jeremy Letang <letang.jeremy@gmail.com>"]
+documentation = "https://docs.rs/sfml"
+repository = "https://github.com/jeremyletang/rust-sfml"
+license = "zlib-acknowledgement"
+keywords = ["sfml", "multimedia", "game"]
+readme = "README.md"
+edition = "2021"
+rust-version = "1.60"
+
+[features]
+default = ["graphics", "audio"]
+window = ["bitflags", "once_cell"]
+graphics = ["window"]
+audio = []
+serde = ["dep:serde"]
+# Used to skip running certain tests on CI, since it's running in a headless environment.
+ci-headless = []
+
+[dependencies]
+num-traits = "0.2.15"
+
+[dependencies.serde]
+version = "1.0"
+features = ["derive"]
+optional = true
+
+[dependencies.once_cell]
+version = "1.7.2"
+optional = true
+
+[dependencies.widestring]
+version = "1.0"
+
+[dependencies.bitflags]
+version = "1.2.1"
+optional = true
+
+[dependencies.link-cplusplus]
+version = "1.0"
+
+[build-dependencies]
+cc = "1.0.67"
+
+[dev-dependencies]
+rand = "0.8.3"
+glu-sys = "0.1.4"
+
+[lib]
+name = "sfml"
+
+[[example]]
+name = "borrowed-resources"
+required-features = ["graphics"]
+
+[[example]]
+name = "custom-drawable"
+required-features = ["graphics"]
+
+[[example]]
+name = "custom-shape"
+required-features = ["graphics"]
+
+[[example]]
+name = "custom-sound-stream"
+required-features = ["audio"]
+
+[[example]]
+name = "mouse"
+required-features = ["graphics"]
+
+[[example]]
+name = "music-stream"
+required-features = ["audio"]
+
+[[example]]
+name = "pong"
+required-features = ["graphics", "audio"]
+
+[[example]]
+name = "sound-capture"
+required-features = ["audio"]
+
+[[example]]
+name = "sound"
+required-features = ["audio"]
+
+[[example]]
+name = "unicode-text-entry"
+required-features = ["graphics"]
+
+[[example]]
+name = "vertex-arrays"
+required-features = ["graphics"]
+
+[[example]]
+name = "shader"
+required-features = ["graphics"]
+
+[[example]]
+name = "custom-sound-recorder"
+required-features = ["audio"]
+
+[[example]]
+name = "cursor"
+required-features = ["graphics"]
+
+[[example]]
+name = "resource-holder"
+required-features = ["graphics", "audio"]
+
+[[example]]
+name = "vertex-buffers"
+required-features = ["graphics"]
+
+[[example]]
+name = "spritemark"
+required-features = ["graphics"]
+
+[[example]]
+name = "opengl"
+required-features = ["graphics"]
+
+[[example]]
+name = "video_modes"
+required-features = ["window"]
+
+[[example]]
+name = "joystick"
+required-features = ["window"]
+
+[workspace]
