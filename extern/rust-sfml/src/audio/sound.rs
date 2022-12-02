@@ -2,9 +2,9 @@ use crate::{
     audio::{SoundBuffer, SoundSource, SoundStatus},
     ffi,
     system::{Time, Vector3f},
-    SfBox
+    SfBox,
 };
-use std::{ptr::NonNull};
+use std::ptr::NonNull;
 
 /// Regular sound that can be played in the audio environment.
 ///
@@ -41,7 +41,6 @@ use std::{ptr::NonNull};
 #[derive(Debug)]
 pub struct Sound {
     sound: NonNull<ffi::audio::sfSound>,
-    buffer: SfBox<SoundBuffer>,
 }
 
 impl Sound {
@@ -51,14 +50,13 @@ impl Sound {
         let s = unsafe { ffi::audio::sfSound_create() };
         let result = Sound {
             sound: NonNull::new(s).expect("Failed to create Sound"),
-            buffer: buffer.to_owned()
         };
-        
+
         unsafe { ffi::audio::sfSound_setBuffer(s, &**buffer) }
-        
+
         return result;
     }
-    
+
     /// Sets whether this sound should loop or not.
     pub fn set_looping(&mut self, looping: bool) {
         unsafe { ffi::audio::sfSound_setLoop(self.sound.as_ptr(), looping) }
@@ -149,7 +147,6 @@ impl Clone for Sound {
         let s = unsafe { ffi::audio::sfSound_copy(self.sound.as_ptr()) };
         Sound {
             sound: NonNull::new(s).expect("Failed to copy Sound"),
-            buffer: self.buffer.to_owned(),
         }
     }
 }

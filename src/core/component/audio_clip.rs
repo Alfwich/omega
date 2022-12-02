@@ -9,10 +9,13 @@ pub struct AudioClip {
 }
 
 impl AudioClip {
-    pub fn new(name: &str, sound_path: &str) -> Self {
+    pub fn new(
+        name: &str,
+        buffer: &std::cell::RefCell<sfml::SfBox<sfml::audio::SoundBuffer>>,
+    ) -> Self {
         AudioClip {
             name: name.to_string(),
-            sound: Sound::new(sound_path),
+            sound: Sound::new(buffer),
         }
     }
 }

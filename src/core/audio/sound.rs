@@ -1,21 +1,18 @@
 use sfml::audio::{Sound as SFMLSound, SoundBuffer};
 
 pub struct Sound {
-    sound_buffer: sfml::SfBox<SoundBuffer>,
-    sound: Option<SFMLSound>,
+    sound: SFMLSound,
 }
 
 impl Sound {
-    pub fn new(sound_file: &str) -> Self {
-        let mut result = Sound {
-            sound_buffer: SoundBuffer::from_file(sound_file).unwrap(),
-            sound: None,
-        };
-        result.sound = Some(SFMLSound::new(&result.sound_buffer));
-        return result;
+    pub fn new(buffer: &std::cell::RefCell<sfml::SfBox<SoundBuffer>>) -> Self {
+        let sound_buffer = buffer.borrow_mut();
+        Sound {
+            sound: SFMLSound::new(&sound_buffer),
+        }
     }
 
     pub fn get_sound(&mut self) -> &mut SFMLSound {
-        self.sound.as_mut().unwrap()
+        &mut self.sound
     }
 }

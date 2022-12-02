@@ -1,4 +1,9 @@
+use std::cell::RefCell;
+use std::collections::HashMap;
+
+use sfml::audio::SoundBuffer;
 use sfml::window::{Event, Key, Style, Window};
+use sfml::SfBox;
 
 use crate::core::component::pre_frame::PreFrame;
 use crate::core::entity::Entity;
@@ -8,6 +13,7 @@ use crate::util::timer::Timer;
 pub struct App {
     pub root: Entity,
     pub state: GameState,
+    pub audio_data: HashMap<String, RefCell<SfBox<SoundBuffer>>>,
 }
 
 impl Default for App {
@@ -15,6 +21,18 @@ impl Default for App {
         App {
             root: Entity::new_noop("root"),
             state: GameState::default(),
+            audio_data: HashMap::new(),
+        }
+    }
+}
+
+impl App {
+    pub fn load_audio_data(&mut self, audio_file_path: &str) {
+        if (!self.audio_data.contains_key(audio_file_path)) {
+            self.audio_data.insert(
+                audio_file_path.to_string(),
+                RefCell::new(sfml::audio::SoundBuffer::from_file(audio_file_path).unwrap()),
+            );
         }
     }
 }
@@ -57,9 +75,8 @@ pub fn run() {
 
     {
         app.root.components.push(Box::new(PreFrame::default()));
-        app.root
-            .children
-            .push(crate::game::entities::title::make_title(&renderer.viewport));
+        let title = crate::game::entities::title::make_title(&mut app, &renderer.viewport);
+        app.root.children.push(title);
 
         while window.is_open() {
             let dt = frame_timer.dt();

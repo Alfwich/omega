@@ -1,3 +1,4 @@
+use crate::app::App;
 use crate::core::component::audio_clip::AudioClip;
 use crate::core::component::component::Component;
 use crate::core::component::image::Image;
@@ -46,11 +47,9 @@ fn update_title(e: &mut Entity, dt: f32) {
         title.rotation -= dt;
     }
 
-    {
-        let beep = e.find_component::<AudioClip>("beep").unwrap();
-        if beep.sound.get_sound().status() == sfml::audio::SoundStatus::STOPPED {
-            beep.sound.get_sound().play();
-        }
+    let beep = e.find_component::<AudioClip>("beep").unwrap();
+    if beep.sound.get_sound().status() == sfml::audio::SoundStatus::STOPPED {
+        beep.sound.get_sound().play();
     }
 }
 
@@ -80,11 +79,17 @@ fn handle_event(e: &mut Entity, ev: &Event) {
     }
 }
 
-pub fn make_title(viewport: &Viewport) -> Entity {
+pub fn make_title(app: &mut App, viewport: &Viewport) -> Entity {
     let mut e = Entity::new("title", update_title, handle_event);
 
     let d = Data::default();
     e.components.push(Box::new(d));
+
+    let texture_id = app_gl::load_image_from_disk("res/img/background.png", 1440, 1070).unwrap();
+    let mut image = Image::new("background", texture_id, 1920, 1080);
+    image.x = (viewport.window_size.0 / 2.) as i32;
+    image.y = (viewport.window_size.1 / 2.) as i32;
+    e.components.push(Box::new(image));
 
     let client = reqwest::blocking::Client::new();
     let remote_image_id = app_gl::load_image_from_url(
@@ -96,18 +101,13 @@ pub fn make_title(viewport: &Viewport) -> Entity {
     let card_image = Image::new("card", remote_image_id, 220, 310);
     e.components.push(Box::new(card_image));
 
-    let texture_id = app_gl::load_image_from_disk("res/img/background.png", 1440, 1070).unwrap();
-    let mut image = Image::new("background", texture_id, 1920, 1080);
-    image.x = (viewport.window_size.0 / 2.) as i32;
-    image.y = (viewport.window_size.1 / 2.) as i32;
-    e.components.push(Box::new(image));
-
     let mut text = Text::new("title", "Omega Ω");
     text.x = (viewport.window_size.0 / 2.) as i32;
     text.y = (viewport.window_size.1 / 2.) as i32;
     e.components.push(Box::new(text));
 
-    let beep = AudioClip::new("beep", "res/snd/beep.wav");
+    app.load_audio_data("res/snd/beep.wav");
+    let beep = AudioClip::new("beep", &app.audio_data["res/snd/beep.wav"]);
     e.components.push(Box::new(beep));
 
     return e;
