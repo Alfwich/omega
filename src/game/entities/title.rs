@@ -1,10 +1,11 @@
+use crate::core::component::audio_clip::AudioClip;
 use crate::core::component::component::Component;
 use crate::core::component::image::Image;
 use crate::core::component::text::Text;
+use crate::core::entity::Entity;
 use crate::core::renderer::app_gl;
 use crate::core::renderer::renderer::Renderer;
 use crate::core::renderer::renderer::Viewport;
-use crate::Entity;
 
 use sfml::window::{Event, Key};
 
@@ -43,6 +44,13 @@ fn update_title(e: &mut Entity, dt: f32) {
     {
         let title = e.find_component::<Text>("title").unwrap();
         title.rotation -= dt;
+    }
+
+    {
+        let beep = e.find_component::<AudioClip>("beep").unwrap();
+        if beep.sound.get_sound().status() == sfml::audio::SoundStatus::STOPPED {
+            beep.sound.get_sound().play();
+        }
     }
 }
 
@@ -85,19 +93,22 @@ pub fn make_title(viewport: &Viewport) -> Entity {
     )
     .unwrap();
 
+    let card_image = Image::new("card", remote_image_id, 220, 310);
+    e.components.push(Box::new(card_image));
+
     let texture_id = app_gl::load_image_from_disk("res/img/background.png", 1440, 1070).unwrap();
     let mut image = Image::new("background", texture_id, 1920, 1080);
     image.x = (viewport.window_size.0 / 2.) as i32;
     image.y = (viewport.window_size.1 / 2.) as i32;
     e.components.push(Box::new(image));
 
-    let card_image = Image::new("card", remote_image_id, 220, 310);
-    e.components.push(Box::new(card_image));
-
     let mut text = Text::new("title", "Omega Ω");
     text.x = (viewport.window_size.0 / 2.) as i32;
     text.y = (viewport.window_size.1 / 2.) as i32;
     e.components.push(Box::new(text));
+
+    let beep = AudioClip::new("beep", "res/snd/beep.wav");
+    e.components.push(Box::new(beep));
 
     return e;
 }
