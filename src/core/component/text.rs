@@ -6,7 +6,7 @@ use core::ffi::c_void;
 use gl::*;
 extern crate nalgebra_glm as glm;
 
-use crate::core::renderer::app_gl;
+use crate::core::renderer::app_gl::*;
 
 use core::any::Any;
 
@@ -23,22 +23,14 @@ pub struct Text {
 }
 
 impl Text {
-    pub fn new(name: &str, text: &str) -> Self {
-        let title_text = app_gl::render_text_to_texture(text).unwrap();
+    pub fn new(name: &str, text_texture: &TextImageResult) -> Self {
         Text {
             name: name.to_string(),
-            text: text.to_string(),
-            texture_id: title_text.texture_id,
-            width: title_text.width,
-            height: title_text.height,
+            texture_id: text_texture.texture_id,
+            width: text_texture.width,
+            height: text_texture.height,
             ..Default::default()
         }
-    }
-}
-
-impl Drop for Text {
-    fn drop(&mut self) {
-        app_gl::release_texture(self.texture_id);
     }
 }
 

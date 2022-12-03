@@ -1,4 +1,5 @@
 use core::ffi::c_void;
+use gl::types::GLint;
 use itertools::Itertools;
 use sfml::graphics::Image;
 use std::collections::HashMap;
@@ -54,7 +55,7 @@ impl Default for TextTextureData {
     }
 }
 
-pub fn load_image_from_disk(path: &str, width: i32, height: i32) -> Result<u32, String> {
+pub fn load_image_from_disk(path: &str) -> Result<u32, String> {
     let mut f = File::open(path).unwrap();
     let mut img_bytes = Vec::new();
     f.read_to_end(&mut img_bytes).unwrap();
@@ -84,13 +85,14 @@ pub fn load_image_from_disk(path: &str, width: i32, height: i32) -> Result<u32, 
             match img_data {
                 Some(img_data) => {
                     let img_data_ptr = img_data.pixel_data().as_ptr() as *const c_void;
+                    let size = img_data.size();
                     // RGBA since pixel_data pads to 4 channels
                     TexImage2D(
                         TEXTURE_2D,
                         0,
                         RGBA.try_into().unwrap(),
-                        width,
-                        height,
+                        size.x as GLint,
+                        size.y as GLint,
                         0,
                         RGBA,
                         UNSIGNED_BYTE,

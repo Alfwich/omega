@@ -4,7 +4,6 @@ use crate::core::component::component::Component;
 use crate::core::component::image::Image;
 use crate::core::component::text::Text;
 use crate::core::entity::Entity;
-use crate::core::renderer::app_gl;
 use crate::core::renderer::renderer::Renderer;
 use crate::core::renderer::renderer::Viewport;
 
@@ -85,29 +84,41 @@ pub fn make_title(app: &mut App, viewport: &Viewport) -> Entity {
     let d = Data::default();
     e.components.push(Box::new(d));
 
-    let texture_id = app_gl::load_image_from_disk("res/img/background.png", 1440, 1070).unwrap();
+    let texture_id = app
+        .resource
+        .load_image_from_disk("res/img/background.png")
+        .unwrap();
     let mut image = Image::new("background", texture_id, 1920, 1080);
     image.x = (viewport.window_size.0 / 2.) as i32;
     image.y = (viewport.window_size.1 / 2.) as i32;
     e.components.push(Box::new(image));
 
-    let client = reqwest::blocking::Client::new();
-    let remote_image_id = app_gl::load_image_from_url(
-        &client,
-        "http://wuteri.ch/misc/visualguider/image/card/Teleport.jpg",
-    )
-    .unwrap();
+    let remote_image_id = app
+        .resource
+        .load_image_from_url("http://wuteri.ch/misc/visualguider/image/card/Teleport.jpg")
+        .unwrap();
 
     let card_image = Image::new("card", remote_image_id, 220, 310);
     e.components.push(Box::new(card_image));
 
-    let mut text = Text::new("title", "Omega Ω");
+    let text_texture = app.resource.load_text_texture("Omega Ω").unwrap();
+    let mut text = Text::new("title", &text_texture);
     text.x = (viewport.window_size.0 / 2.) as i32;
     text.y = (viewport.window_size.1 / 2.) as i32;
     e.components.push(Box::new(text));
 
-    app.load_audio_data("res/snd/beep.wav");
-    let beep = AudioClip::new("beep", &app.audio_data["res/snd/beep.wav"]);
+    let d = 10;
+    for x in 1..d {
+        for y in 1..d {
+            let mut t = Text::new("", &text_texture);
+            t.x = x * (viewport.window_size.0 as i32 / d);
+            t.y = y * (viewport.window_size.1 as i32 / d);
+            e.components.push(Box::new(t));
+        }
+    }
+
+    let audio_data = app.resource.load_audio_data("res/snd/beep.wav").unwrap();
+    let beep = AudioClip::new("beep", &audio_data);
     e.components.push(Box::new(beep));
 
     return e;

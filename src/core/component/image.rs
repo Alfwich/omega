@@ -6,8 +6,6 @@ use core::ffi::c_void;
 use gl::*;
 extern crate nalgebra_glm as glm;
 
-use crate::core::renderer::app_gl;
-
 use core::any::Any;
 
 #[derive(Default, Debug)]
@@ -35,12 +33,6 @@ impl Image {
     }
 
     // TODO: Other methods which encapsalate ctor behavior
-}
-
-impl Drop for Image {
-    fn drop(&mut self) {
-        app_gl::release_texture(self.texture_id);
-    }
 }
 
 impl Component for Image {
