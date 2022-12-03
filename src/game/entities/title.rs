@@ -3,7 +3,7 @@ use crate::core::component::audio_clip::AudioClip;
 use crate::core::component::component::Component;
 use crate::core::component::image::Image;
 use crate::core::component::text::Text;
-use crate::core::entity::Entity;
+use crate::core::entity::{Entity, EntityFns};
 use crate::core::renderer::renderer::Renderer;
 use crate::core::renderer::renderer::Viewport;
 
@@ -27,6 +27,8 @@ impl Component for Data {
         self
     }
 }
+
+static REMOTE_IMAGE_URL: &str = "http://wuteri.ch/misc/visualguider/image/card/Teleport.jpg";
 
 fn update_title(e: &mut Entity, dt: f32) {
     let d;
@@ -79,7 +81,13 @@ fn handle_event(e: &mut Entity, ev: &Event) {
 }
 
 pub fn make_title(app: &mut App, viewport: &Viewport) -> Entity {
-    let mut e = Entity::new("title", update_title, handle_event);
+    let mut e = Entity::new(
+        "title",
+        EntityFns {
+            update_fn: update_title,
+            event_fn: handle_event,
+        },
+    );
 
     let d = Data::default();
     e.components.push(Box::new(d));
@@ -88,17 +96,13 @@ pub fn make_title(app: &mut App, viewport: &Viewport) -> Entity {
         .resource
         .load_image_from_disk("res/img/background.png")
         .unwrap();
-    let mut image = Image::new("background", texture_id, 1920, 1080);
+    let mut image = Image::with_texture("background", texture_id, 1920, 1080);
     image.x = (viewport.window_size.0 / 2.) as i32;
     image.y = (viewport.window_size.1 / 2.) as i32;
     e.components.push(Box::new(image));
 
-    let remote_image_id = app
-        .resource
-        .load_image_from_url("http://wuteri.ch/misc/visualguider/image/card/Teleport.jpg")
-        .unwrap();
-
-    let card_image = Image::new("card", remote_image_id, 220, 310);
+    app.resource.load_image_from_url_async(REMOTE_IMAGE_URL);
+    let card_image = Image::new("card");
     e.components.push(Box::new(card_image));
 
     let text_texture = app.resource.load_text_texture("Omega Ω").unwrap();

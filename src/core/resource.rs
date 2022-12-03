@@ -1,15 +1,77 @@
 use crate::core::renderer::app_gl::*;
 use sfml::{audio::SoundBuffer, SfBox};
+use std::sync::mpsc;
+use std::sync::mpsc::{Receiver, Sender};
+use std::thread;
 use std::{cell::RefCell, collections::HashMap};
 
-#[derive(Default)]
+struct RemoteImageLoadPayload {
+    pub url: String,
+    pub texture_id: u32,
+}
+
 pub struct Resources {
     pub audio_data: HashMap<String, RefCell<SfBox<SoundBuffer>>>,
     pub texture_data: HashMap<String, u32>,
     pub text_data: HashMap<String, TextImageResult>,
+    image_work_tx: Sender<RemoteImageLoadPayload>,
+    image_rx: Receiver<RemoteImageLoadPayload>,
+}
+
+fn image_loading_proc_thread(
+    rx: Receiver<RemoteImageLoadPayload>,
+    tx: Sender<RemoteImageLoadPayload>,
+) {
+    let client = reqwest::blocking::Client::new();
+    loop {
+        let url_to_load = rx.recv();
+        match url_to_load {
+            Ok(payload) => {
+                if let Ok(tid) = load_image_from_url(&client, &payload.url) {
+                    println!("Loaded image! {}", payload.url);
+                    if let Err(_msg) = tx.send(RemoteImageLoadPayload {
+                        url: payload.url,
+                        texture_id: tid,
+                    }) {
+                        return;
+                    }
+                }
+                // LOAD URL
+            }
+            Err(_) => {
+                return;
+            }
+        }
+    }
+}
+
+impl Default for Resources {
+    fn default() -> Self {
+        let (in_tx, in_rx) = mpsc::channel();
+        let (out_tx, out_rx) = mpsc::channel();
+
+        thread::spawn(move || image_loading_proc_thread(in_rx, out_tx));
+
+        Resources {
+            audio_data: HashMap::new(),
+            texture_data: HashMap::new(),
+            text_data: HashMap::new(),
+            image_work_tx: in_tx,
+            image_rx: out_rx,
+        }
+    }
 }
 
 impl Resources {
+    pub fn tick_loads(&mut self) {
+        match self.image_rx.try_recv() {
+            Ok(payload) => {
+                self.texture_data.insert(payload.url, payload.texture_id);
+            }
+            _ => {}
+        }
+    }
+
     pub fn load_audio_data(
         &mut self,
         audio_file_path: &str,
@@ -28,7 +90,16 @@ impl Resources {
         Ok(id)
     }
 
-    pub fn load_image_from_url(&mut self, image_url: &str) -> Result<u32, String> {
+    pub fn load_image_from_url_async(&self, image_url: &str) {
+        if let Err(_msg) = self.image_work_tx.send(RemoteImageLoadPayload {
+            url: image_url.to_string(),
+            texture_id: 0,
+        }) {
+            print!("Failed to send async image load request");
+        }
+    }
+
+    pub fn _load_image_from_url(&self, image_url: &str) -> Result<u32, String> {
         let client = reqwest::blocking::Client::new();
         let remote_image_id = load_image_from_url(&client, image_url)?;
         Ok(remote_image_id)

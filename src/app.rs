@@ -15,7 +15,7 @@ pub struct App {
 impl Default for App {
     fn default() -> Self {
         App {
-            root: Entity::new_noop("root"),
+            root: Entity::default(),
             state: GameState::default(),
             resource: Resources::default(),
         }
@@ -42,6 +42,7 @@ fn handle_window_events(window: &mut Window, app: &mut App) {
 }
 
 fn update(app: &mut App, dt: f32) {
+    app.resource.tick_loads();
     app.root.update(dt);
 }
 
@@ -66,16 +67,11 @@ pub fn run() {
         while window.is_open() {
             let dt = frame_timer.dt();
 
-            println!("fps: {}", 1. / dt);
-
+            //println!("fps: {}", 1. / dt);
             handle_window_events(&mut window, &mut app);
-
             update(&mut app, dt);
-
             window.set_active(true);
-
             app.root.render(&renderer);
-
             window.display();
         }
     }

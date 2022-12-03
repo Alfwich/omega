@@ -3,31 +3,36 @@ use crate::core::renderer::renderer::Renderer;
 
 use sfml::window::Event;
 
-pub struct Entity {
-    pub name: String,
+pub struct EntityFns {
     pub update_fn: fn(&mut Entity, dt: f32),
     pub event_fn: fn(&mut Entity, &Event),
+}
+
+impl Default for EntityFns {
+    fn default() -> Self {
+        EntityFns {
+            update_fn: |_e, _d| {},
+            event_fn: |_e, _ev| {},
+        }
+    }
+}
+
+#[derive(Default)]
+pub struct Entity {
+    pub name: String,
     pub components: Vec<Box<dyn Component>>,
     pub children: Vec<Entity>,
+    pub vtable: EntityFns,
 }
 
 impl Entity {
-    pub fn new(
-        name: &str,
-        update: fn(&mut Entity, dt: f32),
-        event: fn(&mut Entity, &Event),
-    ) -> Self {
+    pub fn new(name: &str, vtable: EntityFns) -> Self {
         Entity {
             name: name.to_string(),
-            update_fn: update,
-            event_fn: event,
             components: Vec::default(),
             children: Vec::default(),
+            vtable,
         }
-    }
-
-    pub fn new_noop(name: &str) -> Self {
-        Entity::new(name, |_e, _d| {}, |_e, _ev| {})
     }
 
     pub fn find_component<T: Component + 'static>(&mut self, name: &str) -> Result<&mut T, String> {
@@ -62,7 +67,7 @@ impl Entity {
     }
 
     pub fn handle_event(&mut self, e: &Event) {
-        (self.event_fn)(self, e);
+        (self.vtable.event_fn)(self, e);
 
         for ent in &mut self.children {
             ent.handle_event(e);
@@ -70,7 +75,7 @@ impl Entity {
     }
 
     pub fn update(&mut self, dt: f32) {
-        (self.update_fn)(self, dt);
+        (self.vtable.update_fn)(self, dt);
 
         for ent in &mut self.children {
             ent.update(dt);
