@@ -5,6 +5,8 @@ use std::sync::mpsc::{Receiver, Sender};
 use std::thread;
 use std::{cell::RefCell, collections::HashMap};
 
+use super::component::text;
+
 struct RemoteImageLoadPayload {
     pub url: String,
     pub texture_id: u32,
@@ -23,11 +25,21 @@ fn image_loading_proc_thread(
     tx: Sender<RemoteImageLoadPayload>,
 ) {
     let client = reqwest::blocking::Client::new();
-    let _context = Context::new(); // OpenGL context required for loading image data on this thread
     loop {
         let url_to_load = rx.recv();
         match url_to_load {
             Ok(payload) => {
+                if payload.texture_id != 0 {
+                    if let Err(_msg) = tx.send(RemoteImageLoadPayload {
+                        url: payload.url,
+                        texture_id: payload.texture_id,
+                    }) {
+                        return;
+                    } else {
+                        continue;
+                    }
+                }
+                let _context = Context::new(); // OpenGL context required for loading image data on this thread
                 if let Ok(tid) = load_image_from_url(&client, &payload.url) {
                     println!("Loaded image! {}", payload.url);
                     if let Err(_msg) = tx.send(RemoteImageLoadPayload {
@@ -35,6 +47,8 @@ fn image_loading_proc_thread(
                         texture_id: tid,
                     }) {
                         return;
+                    } else {
+                        continue;
                     }
                 }
             }
@@ -95,9 +109,10 @@ impl Resources {
     }
 
     pub fn load_image_from_url_async(&self, image_url: &str) {
+        let texture_id: u32 = *self.texture_data.get(image_url).unwrap_or(&0);
         if let Err(_msg) = self.image_work_tx.send(RemoteImageLoadPayload {
             url: image_url.to_string(),
-            texture_id: 0,
+            texture_id,
         }) {
             print!("Failed to send async image load request");
         }

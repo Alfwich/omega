@@ -80,10 +80,12 @@ fn handle_event(e: &mut Entity, ev: &Event) {
             },
             _ => {}
         },
-        Event::ImageLoadEvent((_url, id)) => {
-            //card.texture_id = Some(*id);
-            card.width = 223;
-            card.height = 310;
+        Event::ImageLoadEvent((url, id)) => {
+            if url == REMOTE_IMAGE_URL {
+                card.texture_id = Some(*id);
+                card.width = 223;
+                card.height = 310;
+            }
         }
     }
 }
@@ -110,11 +112,10 @@ pub fn make_title(app: &mut App, viewport: &Viewport) -> Entity {
     e.components.push(Box::new(image));
 
     app.resource.load_image_from_url_async(REMOTE_IMAGE_URL);
-    let id = app.resource.load_image_from_url(REMOTE_IMAGE_URL).unwrap();
-    let card_image = Image::with_texture("card", id, 223, 310);
+
+    let card_image = Image::new("card");
     e.components.push(Box::new(card_image));
 
-    let text_texture = app.resource.load_text_texture("Omega Ω").unwrap();
     let text_texture = app.resource.load_text_texture("Omega Ω").unwrap();
     let mut text = Text::new("title", &text_texture);
     text.x = (viewport.window_size.0 / 2.) as i32;
