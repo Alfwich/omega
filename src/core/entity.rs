@@ -1,7 +1,7 @@
 use crate::core::component::component::Component;
 use crate::core::renderer::renderer::Renderer;
 
-use sfml::window::Event;
+use crate::core::event::Event;
 
 pub struct EntityFns {
     pub update_fn: fn(&mut Entity, dt: f32),

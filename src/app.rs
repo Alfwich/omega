@@ -37,12 +37,23 @@ fn handle_window_events(window: &mut Window, app: &mut App) {
             _ => {}
         }
 
-        app.root.handle_event(&event);
+        app.root
+            .handle_event(&crate::core::event::Event::SFMLEvent(event));
+    }
+
+    loop {
+        if let Some(image_load_result) = app.resource.recv_load_events() {
+            app.root
+                .handle_event(&crate::core::event::Event::ImageLoadEvent(
+                    image_load_result,
+                ));
+        } else {
+            break;
+        }
     }
 }
 
 fn update(app: &mut App, dt: f32) {
-    app.resource.tick_loads();
     app.root.update(dt);
 }
 

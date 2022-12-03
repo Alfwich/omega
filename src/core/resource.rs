@@ -1,5 +1,5 @@
 use crate::core::renderer::app_gl::*;
-use sfml::{audio::SoundBuffer, SfBox};
+use sfml::{audio::SoundBuffer, window::Context, SfBox};
 use std::sync::mpsc;
 use std::sync::mpsc::{Receiver, Sender};
 use std::thread;
@@ -23,6 +23,7 @@ fn image_loading_proc_thread(
     tx: Sender<RemoteImageLoadPayload>,
 ) {
     let client = reqwest::blocking::Client::new();
+    let _context = Context::new(); // OpenGL context required for loading image data on this thread
     loop {
         let url_to_load = rx.recv();
         match url_to_load {
@@ -36,7 +37,6 @@ fn image_loading_proc_thread(
                         return;
                     }
                 }
-                // LOAD URL
             }
             Err(_) => {
                 return;
@@ -63,13 +63,17 @@ impl Default for Resources {
 }
 
 impl Resources {
-    pub fn tick_loads(&mut self) {
+    pub fn recv_load_events(&mut self) -> Option<(String, u32)> {
         match self.image_rx.try_recv() {
             Ok(payload) => {
-                self.texture_data.insert(payload.url, payload.texture_id);
+                let new_str = payload.url.clone();
+                self.texture_data.insert(new_str, payload.texture_id);
+                return Some((payload.url.clone(), payload.texture_id));
             }
             _ => {}
         }
+
+        None
     }
 
     pub fn load_audio_data(
@@ -99,7 +103,7 @@ impl Resources {
         }
     }
 
-    pub fn _load_image_from_url(&self, image_url: &str) -> Result<u32, String> {
+    pub fn load_image_from_url(&self, image_url: &str) -> Result<u32, String> {
         let client = reqwest::blocking::Client::new();
         let remote_image_id = load_image_from_url(&client, image_url)?;
         Ok(remote_image_id)

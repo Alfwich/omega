@@ -4,10 +4,11 @@ use crate::core::component::component::Component;
 use crate::core::component::image::Image;
 use crate::core::component::text::Text;
 use crate::core::entity::{Entity, EntityFns};
+use crate::core::event::Event;
 use crate::core::renderer::renderer::Renderer;
 use crate::core::renderer::renderer::Viewport;
 
-use sfml::window::{Event, Key};
+use sfml::window::{Event as SFMLEvent, Key};
 
 use core::any::Any;
 
@@ -57,26 +58,33 @@ fn update_title(e: &mut Entity, dt: f32) {
 fn handle_event(e: &mut Entity, ev: &Event) {
     let card = e.find_component::<Image>("card").unwrap();
     match ev {
-        Event::MouseMoved { x, y } => {
-            card.x = *x;
-            card.y = *y;
-        }
-        Event::KeyPressed { code, .. } => match code {
-            &Key::W => {
-                card.y -= 10;
+        Event::SFMLEvent(e) => match e {
+            SFMLEvent::MouseMoved { x, y } => {
+                card.x = *x;
+                card.y = *y;
             }
-            &Key::A => {
-                card.x -= 10;
-            }
-            &Key::S => {
-                card.y += 10;
-            }
-            &Key::D => {
-                card.x += 10;
-            }
+            SFMLEvent::KeyPressed { code, .. } => match code {
+                &Key::W => {
+                    card.y -= 10;
+                }
+                &Key::A => {
+                    card.x -= 10;
+                }
+                &Key::S => {
+                    card.y += 10;
+                }
+                &Key::D => {
+                    card.x += 10;
+                }
+                _ => {}
+            },
             _ => {}
         },
-        _ => {}
+        Event::ImageLoadEvent((_url, id)) => {
+            //card.texture_id = Some(*id);
+            card.width = 223;
+            card.height = 310;
+        }
     }
 }
 
@@ -102,9 +110,11 @@ pub fn make_title(app: &mut App, viewport: &Viewport) -> Entity {
     e.components.push(Box::new(image));
 
     app.resource.load_image_from_url_async(REMOTE_IMAGE_URL);
-    let card_image = Image::new("card");
+    let id = app.resource.load_image_from_url(REMOTE_IMAGE_URL).unwrap();
+    let card_image = Image::with_texture("card", id, 223, 310);
     e.components.push(Box::new(card_image));
 
+    let text_texture = app.resource.load_text_texture("Omega Ω").unwrap();
     let text_texture = app.resource.load_text_texture("Omega Ω").unwrap();
     let mut text = Text::new("title", &text_texture);
     text.x = (viewport.window_size.0 / 2.) as i32;
