@@ -7,7 +7,6 @@ use crate::game::state::GameState;
 use crate::util::timer::Timer;
 
 pub struct App {
-    pub root: Entity,
     pub state: GameState,
     pub resource: Resources,
 }
@@ -15,14 +14,13 @@ pub struct App {
 impl Default for App {
     fn default() -> Self {
         App {
-            root: Entity::default(),
             state: GameState::default(),
             resource: Resources::default(),
         }
     }
 }
 
-fn handle_window_events(window: &mut Window, app: &mut App) {
+fn handle_window_events(window: &mut Window, app: &mut App, root: &mut Entity) {
     while let Some(event) = window.poll_event() {
         match event {
             Event::Closed => {
@@ -37,24 +35,18 @@ fn handle_window_events(window: &mut Window, app: &mut App) {
             _ => {}
         }
 
-        app.root
-            .handle_event(&crate::core::event::Event::SFMLEvent(event));
+        root.handle_event(&crate::core::event::Event::SFMLEvent(event));
     }
 
     loop {
         if let Some(image_load_result) = app.resource.recv_load_events() {
-            app.root
-                .handle_event(&crate::core::event::Event::ImageLoadEvent(
-                    image_load_result,
-                ));
+            root.handle_event(&crate::core::event::Event::ImageLoadEvent(
+                image_load_result,
+            ));
         } else {
             break;
         }
     }
-}
-
-fn update(app: &mut App, dt: f32) {
-    app.root.update(dt);
 }
 
 pub fn run() {
@@ -71,18 +63,19 @@ pub fn run() {
     let mut app = App::default();
 
     {
-        app.root.components.push(Box::new(PreFrame::default()));
+        let mut root = Entity::default();
+        root.components.push(Box::new(PreFrame::default()));
         let title = crate::game::entities::title::make_title(&mut app, &renderer.viewport);
-        app.root.children.push(title);
+        root.children.push(title);
 
         while window.is_open() {
             let dt = frame_timer.dt();
 
             //println!("fps: {}", 1. / dt);
-            handle_window_events(&mut window, &mut app);
-            update(&mut app, dt);
+            handle_window_events(&mut window, &mut app, &mut root);
+            root.update(&app, dt);
             window.set_active(true);
-            app.root.render(&renderer);
+            root.render(&renderer);
             window.display();
         }
     }

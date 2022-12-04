@@ -29,7 +29,7 @@ struct Vertex {
     uv: [f32; 2],
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct TextImageResult {
     pub texture_id: u32,
     pub width: u32,

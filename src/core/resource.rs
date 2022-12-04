@@ -5,8 +5,6 @@ use std::sync::mpsc::{Receiver, Sender};
 use std::thread;
 use std::{cell::RefCell, collections::HashMap};
 
-use super::component::text;
-
 struct RemoteImageLoadPayload {
     pub url: String,
     pub texture_id: u32,
@@ -104,8 +102,13 @@ impl Resources {
     }
 
     pub fn load_image_from_disk(&mut self, image_file_path: &str) -> Result<u32, String> {
-        let id = load_image_from_disk(image_file_path)?;
-        Ok(id)
+        if let Some(id) = self.texture_data.get(&image_file_path.to_string()) {
+            Ok(*id)
+        } else {
+            let id = load_image_from_disk(image_file_path)?;
+            self.texture_data.insert(image_file_path.to_string(), id);
+            Ok(id)
+        }
     }
 
     pub fn load_image_from_url_async(&self, image_url: &str) {
@@ -118,15 +121,20 @@ impl Resources {
         }
     }
 
-    pub fn load_image_from_url(&self, image_url: &str) -> Result<u32, String> {
+    pub fn _load_image_from_url(&self, image_url: &str) -> Result<u32, String> {
         let client = reqwest::blocking::Client::new();
         let remote_image_id = load_image_from_url(&client, image_url)?;
         Ok(remote_image_id)
     }
 
     pub fn load_text_texture(&mut self, text: &str) -> Result<TextImageResult, String> {
-        let text = render_text_to_texture(text)?;
-        Ok(text)
+        if let Some(id) = self.text_data.get(&text.to_string()) {
+            return Ok(*id);
+        } else {
+            let text_result = render_text_to_texture(text)?;
+            self.text_data.insert(text.to_string(), text_result);
+            return Ok(text_result);
+        }
     }
 }
 

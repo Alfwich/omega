@@ -1,17 +1,17 @@
+use crate::app::App;
 use crate::core::component::component::Component;
+use crate::core::event::Event;
 use crate::core::renderer::renderer::Renderer;
 
-use crate::core::event::Event;
-
 pub struct EntityFns {
-    pub update_fn: fn(&mut Entity, dt: f32),
+    pub update_fn: fn(&mut Entity, &App, dt: f32),
     pub event_fn: fn(&mut Entity, &Event),
 }
 
 impl Default for EntityFns {
     fn default() -> Self {
         EntityFns {
-            update_fn: |_e, _d| {},
+            update_fn: |_e, _a, _d| {},
             event_fn: |_e, _ev| {},
         }
     }
@@ -74,11 +74,11 @@ impl Entity {
         }
     }
 
-    pub fn update(&mut self, dt: f32) {
-        (self.vtable.update_fn)(self, dt);
+    pub fn update(&mut self, app: &App, dt: f32) {
+        (self.vtable.update_fn)(self, app, dt);
 
         for ent in &mut self.children {
-            ent.update(dt);
+            ent.update(app, dt);
         }
     }
 

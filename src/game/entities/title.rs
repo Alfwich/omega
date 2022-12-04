@@ -31,7 +31,7 @@ impl Component for Data {
 
 static REMOTE_IMAGE_URL: &str = "http://wuteri.ch/misc/visualguider/image/card/Teleport.jpg";
 
-fn update_title(e: &mut Entity, dt: f32) {
+fn update_title(e: &mut Entity, _app: &App, dt: f32) {
     let d;
     {
         let data = e.find_component::<Data>("data").unwrap();
