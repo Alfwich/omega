@@ -566,7 +566,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "omega_survival"
+name = "omega"
 version = "0.1.0"
 dependencies = [
  "freetype-rs",

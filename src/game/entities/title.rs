@@ -110,10 +110,7 @@ pub fn make_title(app: &mut App, viewport: &Viewport) -> Entity {
         },
     );
 
-    {
-        let d = Data::default();
-        e.components.push(Box::new(d));
-    }
+    e.add_component(Data::default());
 
     {
         let texture_info = app
@@ -129,7 +126,7 @@ pub fn make_title(app: &mut App, viewport: &Viewport) -> Entity {
         );
         image.x = (viewport.window_size.0 / 2.) as i32;
         image.y = (viewport.window_size.1 / 2.) as i32;
-        e.components.push(Box::new(image));
+        e.add_component(image);
     }
 
     {
@@ -137,13 +134,12 @@ pub fn make_title(app: &mut App, viewport: &Viewport) -> Entity {
         let mut async_local = Image::new("async_local");
         async_local.x = 500;
         async_local.y = 500;
-        e.components.push(Box::new(async_local));
+        e.add_component(async_local);
     }
 
     {
         app.resource.load_image_from_url_async(REMOTE_IMAGE_URL);
-        let card_image = Image::new("card");
-        e.components.push(Box::new(card_image));
+        e.add_component(Image::new("card"));
     }
 
     {
@@ -151,7 +147,7 @@ pub fn make_title(app: &mut App, viewport: &Viewport) -> Entity {
         let mut text = Text::new("title", &text_texture);
         text.x = (viewport.window_size.0 / 2.) as i32;
         text.y = (viewport.window_size.1 / 2.) as i32;
-        e.components.push(Box::new(text));
+        e.add_component(text);
 
         let d = 5;
         for x in 1..d {
@@ -159,7 +155,7 @@ pub fn make_title(app: &mut App, viewport: &Viewport) -> Entity {
                 let mut t = Text::new("", &text_texture);
                 t.x = x * (viewport.window_size.0 as i32 / d);
                 t.y = y * (viewport.window_size.1 as i32 / d);
-                e.components.push(Box::new(t));
+                e.add_component(t);
             }
         }
     }
@@ -167,7 +163,7 @@ pub fn make_title(app: &mut App, viewport: &Viewport) -> Entity {
     {
         let audio_data = app.resource.load_audio_data("res/snd/beep.wav").unwrap();
         let beep = AudioClip::new("beep", &audio_data);
-        e.components.push(Box::new(beep));
+        e.add_component(beep);
     }
 
     return e;

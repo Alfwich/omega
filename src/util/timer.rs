@@ -1,7 +1,7 @@
 use std::time::Instant;
 
 pub struct Timer {
-    pub last: std::time::Instant,
+    last: std::time::Instant,
 }
 
 impl Default for Timer {

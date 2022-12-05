@@ -19,10 +19,10 @@ impl Default for EntityFns {
 
 #[derive(Default)]
 pub struct Entity {
-    pub name: String,
-    pub components: Vec<Box<dyn Component>>,
-    pub children: Vec<Entity>,
-    pub vtable: EntityFns,
+    name: String,
+    components: Vec<Box<dyn Component>>,
+    children: Vec<Entity>,
+    vtable: EntityFns,
 }
 
 impl Entity {
@@ -33,6 +33,14 @@ impl Entity {
             children: Vec::default(),
             vtable,
         }
+    }
+
+    pub fn add_component<T: Component + 'static>(&mut self, cmp: T) {
+        self.components.push(Box::new(cmp));
+    }
+
+    pub fn add_child(&mut self, ent: Entity) {
+        self.children.push(ent);
     }
 
     pub fn find_component<T: Component + 'static>(&mut self, name: &str) -> Result<&mut T, String> {
