@@ -1,9 +1,11 @@
 use crate::core::renderer::app_gl::*;
 use sfml::{audio::SoundBuffer, window::Context, SfBox};
-use std::sync::mpsc;
 use std::sync::mpsc::{Receiver, Sender};
 use std::thread;
-use std::{cell::RefCell, collections::HashMap};
+use std::{
+    cell::RefCell,
+    collections::{HashMap, HashSet},
+};
 
 struct RemoteImageLoadPayload {
     pub url: String,
@@ -14,8 +16,9 @@ pub struct Resources {
     pub audio_data: HashMap<String, RefCell<SfBox<SoundBuffer>>>,
     pub texture_data: HashMap<String, u32>,
     pub text_data: HashMap<String, TextImageResult>,
-    image_work_tx: Sender<RemoteImageLoadPayload>,
-    image_rx: Receiver<RemoteImageLoadPayload>,
+    remote_image_loading: HashSet<String>,
+    remote_image_work_tx: Sender<RemoteImageLoadPayload>,
+    remote_image_rx: Receiver<RemoteImageLoadPayload>,
 }
 
 fn image_loading_proc_thread(
@@ -37,9 +40,10 @@ fn image_loading_proc_thread(
                         continue;
                     }
                 }
-                let _context = Context::new(); // OpenGL context required for loading image data on this thread
+                // HACK: Unsure why the thread-specific context failes to upload texture data inside the rx block.
+                //       Create a new GL context for loading this image data as it is needed.
+                let _context = Context::new();
                 if let Ok(tid) = load_image_from_url(&client, &payload.url) {
-                    println!("Loaded image! {}", payload.url);
                     if let Err(_msg) = tx.send(RemoteImageLoadPayload {
                         url: payload.url,
                         texture_id: tid,
@@ -50,7 +54,7 @@ fn image_loading_proc_thread(
                     }
                 }
             }
-            Err(_) => {
+            _ => {
                 return;
             }
         }
@@ -59,8 +63,8 @@ fn image_loading_proc_thread(
 
 impl Default for Resources {
     fn default() -> Self {
-        let (in_tx, in_rx) = mpsc::channel();
-        let (out_tx, out_rx) = mpsc::channel();
+        let (in_tx, in_rx) = std::sync::mpsc::channel();
+        let (out_tx, out_rx) = std::sync::mpsc::channel();
 
         thread::spawn(move || image_loading_proc_thread(in_rx, out_tx));
 
@@ -68,18 +72,20 @@ impl Default for Resources {
             audio_data: HashMap::new(),
             texture_data: HashMap::new(),
             text_data: HashMap::new(),
-            image_work_tx: in_tx,
-            image_rx: out_rx,
+            remote_image_loading: HashSet::new(),
+            remote_image_work_tx: in_tx,
+            remote_image_rx: out_rx,
         }
     }
 }
 
 impl Resources {
     pub fn recv_load_events(&mut self) -> Option<(String, u32)> {
-        match self.image_rx.try_recv() {
+        match self.remote_image_rx.try_recv() {
             Ok(payload) => {
-                let new_str = payload.url.clone();
-                self.texture_data.insert(new_str, payload.texture_id);
+                self.texture_data
+                    .insert(payload.url.clone(), payload.texture_id);
+                self.remote_image_loading.remove(&payload.url.clone());
                 return Some((payload.url.clone(), payload.texture_id));
             }
             _ => {}
@@ -111,20 +117,20 @@ impl Resources {
         }
     }
 
-    pub fn load_image_from_url_async(&self, image_url: &str) {
+    pub fn load_image_from_url_async(&mut self, image_url: &str) {
         let texture_id: u32 = *self.texture_data.get(image_url).unwrap_or(&0);
-        if let Err(_msg) = self.image_work_tx.send(RemoteImageLoadPayload {
+        let remote_image_is_loading = self.remote_image_loading.contains(&image_url.to_string());
+        if texture_id != 0 || remote_image_is_loading {
+            return;
+        };
+
+        self.remote_image_loading.insert(image_url.to_string());
+        if let Err(_msg) = self.remote_image_work_tx.send(RemoteImageLoadPayload {
             url: image_url.to_string(),
             texture_id,
         }) {
             print!("Failed to send async image load request");
         }
-    }
-
-    pub fn _load_image_from_url(&self, image_url: &str) -> Result<u32, String> {
-        let client = reqwest::blocking::Client::new();
-        let remote_image_id = load_image_from_url(&client, image_url)?;
-        Ok(remote_image_id)
     }
 
     pub fn load_text_texture(&mut self, text: &str) -> Result<TextImageResult, String> {
