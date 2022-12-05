@@ -29,7 +29,7 @@ struct Vertex {
     uv: [f32; 2],
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Default, Debug, Copy, Clone)]
 pub struct ImageResult {
     pub texture_id: u32,
     pub width: u32,
@@ -55,7 +55,7 @@ impl Default for TextTextureData {
     }
 }
 
-pub fn load_image_from_disk(path: &str) -> Result<u32, String> {
+pub fn load_image_from_disk(path: &str) -> Result<ImageResult, String> {
     let mut f = File::open(path).unwrap();
     let mut img_bytes = Vec::new();
     f.read_to_end(&mut img_bytes).unwrap();
@@ -100,6 +100,11 @@ pub fn load_image_from_disk(path: &str) -> Result<u32, String> {
                     );
                     GenerateMipmap(TEXTURE_2D);
                     BindTexture(TEXTURE_2D, 0);
+                    return Ok(ImageResult {
+                        texture_id: id,
+                        width: size.x,
+                        height: size.y,
+                    });
                 }
                 None => {
                     DeleteTextures(1, &id);
@@ -109,7 +114,7 @@ pub fn load_image_from_disk(path: &str) -> Result<u32, String> {
             }
         }
 
-        return Ok(id);
+        return Err("Failed to load disk image".to_string());
     }
 }
 

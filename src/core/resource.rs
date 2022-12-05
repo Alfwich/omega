@@ -8,8 +8,16 @@ use std::{
 };
 
 #[derive(Default, Clone)]
-pub struct RemoteImageLoadPayload {
-    pub url: String,
+pub enum ImageLoadPayloadType {
+    #[default]
+    Remote,
+    Disk,
+}
+
+#[derive(Default, Clone)]
+pub struct ImageLoadPayload {
+    pub image_type: ImageLoadPayloadType,
+    pub path: String,
     pub texture_id: u32,
     pub width: u32,
     pub height: u32,
@@ -17,25 +25,23 @@ pub struct RemoteImageLoadPayload {
 
 pub struct Resources {
     pub audio_data: HashMap<String, RefCell<SfBox<SoundBuffer>>>,
-    pub texture_data: HashMap<String, u32>,
+    pub texture_data: HashMap<String, ImageResult>,
     pub text_data: HashMap<String, ImageResult>,
     remote_image_loading: HashSet<String>,
-    remote_image_work_tx: Sender<RemoteImageLoadPayload>,
-    remote_image_rx: Receiver<RemoteImageLoadPayload>,
+    remote_image_work_tx: Sender<ImageLoadPayload>,
+    remote_image_rx: Receiver<ImageLoadPayload>,
 }
 
-fn image_loading_proc_thread(
-    rx: Receiver<RemoteImageLoadPayload>,
-    tx: Sender<RemoteImageLoadPayload>,
-) {
+fn image_loading_proc_thread(rx: Receiver<ImageLoadPayload>, tx: Sender<ImageLoadPayload>) {
     let client = reqwest::blocking::Client::new();
     loop {
         let url_to_load = rx.recv();
         match url_to_load {
             Ok(payload) => {
                 if payload.texture_id != 0 {
-                    if let Err(_msg) = tx.send(RemoteImageLoadPayload {
-                        url: payload.url,
+                    if let Err(_msg) = tx.send(ImageLoadPayload {
+                        image_type: payload.image_type,
+                        path: payload.path,
                         texture_id: payload.texture_id,
                         width: payload.width,
                         height: payload.height,
@@ -48,16 +54,36 @@ fn image_loading_proc_thread(
                 // HACK: Unsure why the thread-specific context failes to upload texture data inside the rx block.
                 //       Create a new GL context for loading this image data as it is needed.
                 let _context = Context::new();
-                if let Ok(result) = load_image_from_url(&client, &payload.url) {
-                    if let Err(_msg) = tx.send(RemoteImageLoadPayload {
-                        url: payload.url,
-                        texture_id: result.texture_id,
-                        width: result.width,
-                        height: result.height,
-                    }) {
-                        return;
-                    } else {
-                        continue;
+                match payload.image_type {
+                    ImageLoadPayloadType::Remote => {
+                        if let Ok(result) = load_image_from_url(&client, &payload.path) {
+                            if let Err(_msg) = tx.send(ImageLoadPayload {
+                                image_type: payload.image_type,
+                                path: payload.path,
+                                texture_id: result.texture_id,
+                                width: result.width,
+                                height: result.height,
+                            }) {
+                                return;
+                            } else {
+                                continue;
+                            }
+                        }
+                    }
+                    ImageLoadPayloadType::Disk => {
+                        if let Ok(result) = load_image_from_disk(&payload.path) {
+                            if let Err(_msg) = tx.send(ImageLoadPayload {
+                                image_type: payload.image_type,
+                                path: payload.path,
+                                texture_id: result.texture_id,
+                                width: result.width,
+                                height: result.height,
+                            }) {
+                                return;
+                            } else {
+                                continue;
+                            }
+                        }
                     }
                 }
             }
@@ -87,13 +113,19 @@ impl Default for Resources {
 }
 
 impl Resources {
-    pub fn recv_load_events(&mut self) -> Option<(String, RemoteImageLoadPayload)> {
+    pub fn recv_load_events(&mut self) -> Option<(String, ImageLoadPayload)> {
         match self.remote_image_rx.try_recv() {
             Ok(payload) => {
-                self.texture_data
-                    .insert(payload.url.clone(), payload.texture_id);
-                self.remote_image_loading.remove(&payload.url.clone());
-                return Some((payload.url.clone(), payload.clone()));
+                self.texture_data.insert(
+                    payload.path.clone(),
+                    ImageResult {
+                        texture_id: payload.texture_id,
+                        width: payload.width,
+                        height: payload.height,
+                    },
+                );
+                self.remote_image_loading.remove(&payload.path.clone());
+                return Some((payload.path.clone(), payload.clone()));
             }
             _ => {}
         }
@@ -114,7 +146,7 @@ impl Resources {
         Ok(&self.audio_data[audio_file_path])
     }
 
-    pub fn load_image_from_disk(&mut self, image_file_path: &str) -> Result<u32, String> {
+    pub fn load_image_from_disk(&mut self, image_file_path: &str) -> Result<ImageResult, String> {
         if let Some(id) = self.texture_data.get(&image_file_path.to_string()) {
             Ok(*id)
         } else {
@@ -124,17 +156,43 @@ impl Resources {
         }
     }
 
+    pub fn load_image_from_disk_async(&mut self, image_path: &str) {
+        let texture_data = *self
+            .texture_data
+            .get(image_path)
+            .unwrap_or(&ImageResult::default());
+        let image_is_loading = self.remote_image_loading.contains(&image_path.to_string());
+        if texture_data.texture_id != 0 || image_is_loading {
+            return;
+        };
+
+        self.remote_image_loading.insert(image_path.to_string());
+        if let Err(_msg) = self.remote_image_work_tx.send(ImageLoadPayload {
+            image_type: ImageLoadPayloadType::Disk,
+            path: image_path.to_string(),
+            texture_id: texture_data.texture_id,
+            width: 0,
+            height: 0,
+        }) {
+            print!("Failed to send async image load request");
+        }
+    }
+
     pub fn load_image_from_url_async(&mut self, image_url: &str) {
-        let texture_id: u32 = *self.texture_data.get(image_url).unwrap_or(&0);
+        let texture_info = *self
+            .texture_data
+            .get(image_url)
+            .unwrap_or(&ImageResult::default());
         let remote_image_is_loading = self.remote_image_loading.contains(&image_url.to_string());
-        if texture_id != 0 || remote_image_is_loading {
+        if texture_info.texture_id != 0 || remote_image_is_loading {
             return;
         };
 
         self.remote_image_loading.insert(image_url.to_string());
-        if let Err(_msg) = self.remote_image_work_tx.send(RemoteImageLoadPayload {
-            url: image_url.to_string(),
-            texture_id,
+        if let Err(_msg) = self.remote_image_work_tx.send(ImageLoadPayload {
+            image_type: ImageLoadPayloadType::Remote,
+            path: image_url.to_string(),
+            texture_id: texture_info.texture_id,
             width: 0,
             height: 0,
         }) {
@@ -155,12 +213,12 @@ impl Resources {
 
 impl Drop for Resources {
     fn drop(&mut self) {
-        for texture_id in self.texture_data.values() {
-            release_texture(*texture_id);
+        for texture_info in self.texture_data.values() {
+            release_texture(texture_info.texture_id);
         }
 
-        for texture_id in self.text_data.values() {
-            release_texture(texture_id.texture_id);
+        for texture_info in self.text_data.values() {
+            release_texture(texture_info.texture_id);
         }
         self.texture_data.clear();
         self.audio_data.clear();

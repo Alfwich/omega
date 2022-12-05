@@ -4,7 +4,7 @@ use crate::core::component::component::Component;
 use crate::core::component::image::Image;
 use crate::core::component::text::Text;
 use crate::core::entity::{Entity, EntityFns};
-use crate::core::event::Event;
+use crate::core::event::{Event, ImageLoadEventPayload};
 use crate::core::renderer::renderer::Renderer;
 use crate::core::renderer::renderer::Viewport;
 
@@ -30,6 +30,7 @@ impl Component for Data {
 }
 
 static REMOTE_IMAGE_URL: &str = "http://wuteri.ch/misc/visualguider/image/card/Teleport.jpg";
+static DISK_IMAGE_PATH: &str = "res/img/motorcycle.png";
 
 fn update_title(e: &mut Entity, _app: &App, dt: f32) {
     let d;
@@ -85,11 +86,16 @@ fn handle_event(e: &mut Entity, ev: &Event) {
             },
             _ => {}
         },
-        Event::ImageLoadEvent(url, id, width, height) => {
+        Event::ImageLoadEvent(ImageLoadEventPayload(url, id, width, height)) => {
             if url == REMOTE_IMAGE_URL {
                 card.texture_id = Some(*id);
                 card.width = *width;
                 card.height = *height;
+            } else if url == DISK_IMAGE_PATH {
+                let async_local = e.find_component::<Image>("async_local").unwrap();
+                async_local.texture_id = Some(*id);
+                async_local.width = *width;
+                async_local.height = *height;
             }
         }
     }
@@ -104,42 +110,65 @@ pub fn make_title(app: &mut App, viewport: &Viewport) -> Entity {
         },
     );
 
-    let d = Data::default();
-    e.components.push(Box::new(d));
+    {
+        let d = Data::default();
+        e.components.push(Box::new(d));
+    }
 
-    let texture_id = app
-        .resource
-        .load_image_from_disk("res/img/background.png")
-        .unwrap();
-    let mut image = Image::with_texture("background", texture_id, 1920, 1080);
-    image.x = (viewport.window_size.0 / 2.) as i32;
-    image.y = (viewport.window_size.1 / 2.) as i32;
-    e.components.push(Box::new(image));
+    {
+        let texture_info = app
+            .resource
+            .load_image_from_disk("res/img/background.png")
+            .unwrap();
 
-    app.resource.load_image_from_url_async(REMOTE_IMAGE_URL);
+        let mut image = Image::with_texture(
+            "background",
+            texture_info.texture_id,
+            texture_info.width,
+            texture_info.height,
+        );
+        image.x = (viewport.window_size.0 / 2.) as i32;
+        image.y = (viewport.window_size.1 / 2.) as i32;
+        e.components.push(Box::new(image));
+    }
 
-    let card_image = Image::new("card");
-    e.components.push(Box::new(card_image));
+    {
+        app.resource.load_image_from_disk_async(DISK_IMAGE_PATH);
+        let mut async_local = Image::new("async_local");
+        async_local.x = 500;
+        async_local.y = 500;
+        e.components.push(Box::new(async_local));
+    }
 
-    let text_texture = app.resource.load_text_texture("Omega Ω").unwrap();
-    let mut text = Text::new("title", &text_texture);
-    text.x = (viewport.window_size.0 / 2.) as i32;
-    text.y = (viewport.window_size.1 / 2.) as i32;
-    e.components.push(Box::new(text));
+    {
+        app.resource.load_image_from_url_async(REMOTE_IMAGE_URL);
+        let card_image = Image::new("card");
+        e.components.push(Box::new(card_image));
+    }
 
-    let d = 10;
-    for x in 1..d {
-        for y in 1..d {
-            let mut t = Text::new("", &text_texture);
-            t.x = x * (viewport.window_size.0 as i32 / d);
-            t.y = y * (viewport.window_size.1 as i32 / d);
-            e.components.push(Box::new(t));
+    {
+        let text_texture = app.resource.load_text_texture("Omega Ω").unwrap();
+        let mut text = Text::new("title", &text_texture);
+        text.x = (viewport.window_size.0 / 2.) as i32;
+        text.y = (viewport.window_size.1 / 2.) as i32;
+        e.components.push(Box::new(text));
+
+        let d = 5;
+        for x in 1..d {
+            for y in 1..d {
+                let mut t = Text::new("", &text_texture);
+                t.x = x * (viewport.window_size.0 as i32 / d);
+                t.y = y * (viewport.window_size.1 as i32 / d);
+                e.components.push(Box::new(t));
+            }
         }
     }
 
-    let audio_data = app.resource.load_audio_data("res/snd/beep.wav").unwrap();
-    let beep = AudioClip::new("beep", &audio_data);
-    e.components.push(Box::new(beep));
+    {
+        let audio_data = app.resource.load_audio_data("res/snd/beep.wav").unwrap();
+        let beep = AudioClip::new("beep", &audio_data);
+        e.components.push(Box::new(beep));
+    }
 
     return e;
 }

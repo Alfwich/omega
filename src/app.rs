@@ -2,7 +2,11 @@ use sfml::window::{Event, Key, Style, Window};
 
 use crate::core::component::pre_frame::PreFrame;
 use crate::core::entity::Entity;
+use crate::core::event::Event::{ImageLoadEvent, SFMLEvent};
+use crate::core::event::ImageLoadEventPayload;
+use crate::core::renderer::renderer::Renderer;
 use crate::core::resource::Resources;
+use crate::game::entities::title;
 use crate::game::state::GameState;
 use crate::util::timer::Timer;
 
@@ -35,18 +39,18 @@ fn handle_window_events(window: &mut Window, app: &mut App, root: &mut Entity) {
             _ => {}
         }
 
-        root.handle_event(&crate::core::event::Event::SFMLEvent(event));
+        root.handle_event(&SFMLEvent(event));
     }
 
     loop {
         if let Some(image_load_result) = app.resource.recv_load_events() {
             let load_info = image_load_result.1;
-            root.handle_event(&crate::core::event::Event::ImageLoadEvent(
+            root.handle_event(&ImageLoadEvent(ImageLoadEventPayload(
                 image_load_result.0,
                 load_info.texture_id,
                 load_info.width,
                 load_info.height,
-            ));
+            )));
         } else {
             break;
         }
@@ -61,15 +65,14 @@ pub fn run() {
     window.set_framerate_limit(0);
     window.set_vertical_sync_enabled(false);
 
-    let renderer =
-        crate::core::renderer::renderer::Renderer::new(WINDOW_SIZE.0 as f32, WINDOW_SIZE.1 as f32);
+    let renderer = Renderer::new(WINDOW_SIZE.0 as f32, WINDOW_SIZE.1 as f32);
     let mut frame_timer = Timer::default();
     let mut app = App::default();
 
     {
         let mut root = Entity::default();
         root.components.push(Box::new(PreFrame::default()));
-        let title = crate::game::entities::title::make_title(&mut app, &renderer.viewport);
+        let title = title::make_title(&mut app, &renderer.viewport);
         root.children.push(title);
 
         while window.is_open() {
