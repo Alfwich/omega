@@ -30,7 +30,7 @@ struct Vertex {
 }
 
 #[derive(Debug, Copy, Clone)]
-pub struct TextImageResult {
+pub struct ImageResult {
     pub texture_id: u32,
     pub width: u32,
     pub height: u32,
@@ -113,7 +113,10 @@ pub fn load_image_from_disk(path: &str) -> Result<u32, String> {
     }
 }
 
-pub fn load_image_from_url(client: &reqwest::blocking::Client, url: &str) -> Result<u32, String> {
+pub fn load_image_from_url(
+    client: &reqwest::blocking::Client,
+    url: &str,
+) -> Result<ImageResult, String> {
     match client.get(url).send() {
         Ok(response) => {
             let resp = response.bytes();
@@ -143,14 +146,15 @@ pub fn load_image_from_url(client: &reqwest::blocking::Client, url: &str) -> Res
                     match img_data {
                         Some(img_data) => {
                             let img_data_ptr = img_data.pixel_data().as_ptr() as *const c_void;
+                            let img_size = img_data.size();
                             // RGBA since pixel_data pads to 4 channels
                             // TODO: Need to factor in the size of the resulting image
                             TexImage2D(
                                 TEXTURE_2D,
                                 0,
                                 RGBA.try_into().unwrap(),
-                                223,
-                                310,
+                                img_size.x as i32,
+                                img_size.y as i32,
                                 0,
                                 RGBA,
                                 UNSIGNED_BYTE,
@@ -158,6 +162,11 @@ pub fn load_image_from_url(client: &reqwest::blocking::Client, url: &str) -> Res
                             );
                             GenerateMipmap(TEXTURE_2D);
                             BindTexture(TEXTURE_2D, 0);
+                            return Ok(ImageResult {
+                                texture_id: id,
+                                width: img_size.x,
+                                height: img_size.y,
+                            });
                         }
                         None => {
                             DeleteTextures(1, &id);
@@ -167,7 +176,7 @@ pub fn load_image_from_url(client: &reqwest::blocking::Client, url: &str) -> Res
                     }
                 }
 
-                return Ok(id);
+                return Err("Bad Image".to_string());
             }
         }
         Err(_) => {
@@ -257,7 +266,7 @@ fn sw_render_text_to_buffer(str: &str, data: &mut TextTextureData) {
     );
 }
 
-pub fn render_text_to_texture(str: &str) -> Result<TextImageResult, &str> {
+pub fn render_text_to_texture(str: &str) -> Result<ImageResult, &str> {
     unsafe {
         let mut id: u32 = 0;
         GenTextures(1, &mut id);
@@ -302,7 +311,7 @@ pub fn render_text_to_texture(str: &str) -> Result<TextImageResult, &str> {
         GenerateMipmap(TEXTURE_2D);
         BindTexture(TEXTURE_2D, 0);
 
-        Ok(TextImageResult {
+        Ok(ImageResult {
             texture_id: id,
             width: texture_data.width as u32,
             height: texture_data.height as u32,

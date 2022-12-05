@@ -23,7 +23,7 @@ pub struct Text {
 }
 
 impl Text {
-    pub fn new(name: &str, text_texture: &TextImageResult) -> Self {
+    pub fn new(name: &str, text_texture: &ImageResult) -> Self {
         Text {
             name: name.to_string(),
             texture_id: text_texture.texture_id,

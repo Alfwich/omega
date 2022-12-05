@@ -7,15 +7,18 @@ use std::{
     collections::{HashMap, HashSet},
 };
 
-struct RemoteImageLoadPayload {
+#[derive(Default, Clone)]
+pub struct RemoteImageLoadPayload {
     pub url: String,
     pub texture_id: u32,
+    pub width: u32,
+    pub height: u32,
 }
 
 pub struct Resources {
     pub audio_data: HashMap<String, RefCell<SfBox<SoundBuffer>>>,
     pub texture_data: HashMap<String, u32>,
-    pub text_data: HashMap<String, TextImageResult>,
+    pub text_data: HashMap<String, ImageResult>,
     remote_image_loading: HashSet<String>,
     remote_image_work_tx: Sender<RemoteImageLoadPayload>,
     remote_image_rx: Receiver<RemoteImageLoadPayload>,
@@ -34,6 +37,8 @@ fn image_loading_proc_thread(
                     if let Err(_msg) = tx.send(RemoteImageLoadPayload {
                         url: payload.url,
                         texture_id: payload.texture_id,
+                        width: payload.width,
+                        height: payload.height,
                     }) {
                         return;
                     } else {
@@ -43,10 +48,12 @@ fn image_loading_proc_thread(
                 // HACK: Unsure why the thread-specific context failes to upload texture data inside the rx block.
                 //       Create a new GL context for loading this image data as it is needed.
                 let _context = Context::new();
-                if let Ok(tid) = load_image_from_url(&client, &payload.url) {
+                if let Ok(result) = load_image_from_url(&client, &payload.url) {
                     if let Err(_msg) = tx.send(RemoteImageLoadPayload {
                         url: payload.url,
-                        texture_id: tid,
+                        texture_id: result.texture_id,
+                        width: result.width,
+                        height: result.height,
                     }) {
                         return;
                     } else {
@@ -80,13 +87,13 @@ impl Default for Resources {
 }
 
 impl Resources {
-    pub fn recv_load_events(&mut self) -> Option<(String, u32)> {
+    pub fn recv_load_events(&mut self) -> Option<(String, RemoteImageLoadPayload)> {
         match self.remote_image_rx.try_recv() {
             Ok(payload) => {
                 self.texture_data
                     .insert(payload.url.clone(), payload.texture_id);
                 self.remote_image_loading.remove(&payload.url.clone());
-                return Some((payload.url.clone(), payload.texture_id));
+                return Some((payload.url.clone(), payload.clone()));
             }
             _ => {}
         }
@@ -128,12 +135,14 @@ impl Resources {
         if let Err(_msg) = self.remote_image_work_tx.send(RemoteImageLoadPayload {
             url: image_url.to_string(),
             texture_id,
+            width: 0,
+            height: 0,
         }) {
             print!("Failed to send async image load request");
         }
     }
 
-    pub fn load_text_texture(&mut self, text: &str) -> Result<TextImageResult, String> {
+    pub fn load_text_texture(&mut self, text: &str) -> Result<ImageResult, String> {
         if let Some(id) = self.text_data.get(&text.to_string()) {
             return Ok(*id);
         } else {

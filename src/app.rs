@@ -40,8 +40,12 @@ fn handle_window_events(window: &mut Window, app: &mut App, root: &mut Entity) {
 
     loop {
         if let Some(image_load_result) = app.resource.recv_load_events() {
+            let load_info = image_load_result.1;
             root.handle_event(&crate::core::event::Event::ImageLoadEvent(
-                image_load_result,
+                image_load_result.0,
+                load_info.texture_id,
+                load_info.width,
+                load_info.height,
             ));
         } else {
             break;

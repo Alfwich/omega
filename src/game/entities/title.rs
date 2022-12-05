@@ -49,6 +49,11 @@ fn update_title(e: &mut Entity, _app: &App, dt: f32) {
         title.rotation -= dt;
     }
 
+    {
+        let card = e.find_component::<Image>("card").unwrap();
+        card.rotation += dt * 4.;
+    }
+
     let beep = e.find_component::<AudioClip>("beep").unwrap();
     if beep.sound.get_sound().status() == sfml::audio::SoundStatus::STOPPED {
         beep.sound.get_sound().play();
@@ -80,11 +85,11 @@ fn handle_event(e: &mut Entity, ev: &Event) {
             },
             _ => {}
         },
-        Event::ImageLoadEvent((url, id)) => {
+        Event::ImageLoadEvent(url, id, width, height) => {
             if url == REMOTE_IMAGE_URL {
                 card.texture_id = Some(*id);
-                card.width = 223;
-                card.height = 310;
+                card.width = *width;
+                card.height = *height;
             }
         }
     }
