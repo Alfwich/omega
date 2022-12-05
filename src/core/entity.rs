@@ -5,14 +5,14 @@ use crate::core::renderer::renderer::Renderer;
 
 pub struct EntityFns {
     pub update_fn: fn(&mut Entity, &App, dt: f32),
-    pub event_fn: fn(&mut Entity, &Event),
+    pub event_fn: fn(&mut Entity, &mut App, &Event),
 }
 
 impl Default for EntityFns {
     fn default() -> Self {
         EntityFns {
             update_fn: |_e, _a, _d| {},
-            event_fn: |_e, _ev| {},
+            event_fn: |_e, _a, _ev| {},
         }
     }
 }
@@ -74,11 +74,11 @@ impl Entity {
         Err(format!("Could not find child with name: {}", name))
     }
 
-    pub fn handle_event(&mut self, e: &Event) {
-        (self.vtable.event_fn)(self, e);
+    pub fn handle_event(&mut self, a: &mut App, e: &Event) {
+        (self.vtable.event_fn)(self, a, e);
 
         for ent in &mut self.children {
-            ent.handle_event(e);
+            ent.handle_event(a, e);
         }
     }
 

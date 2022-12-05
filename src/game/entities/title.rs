@@ -8,6 +8,7 @@ use crate::core::event::{Event, ImageLoadEventPayload};
 use crate::core::renderer::renderer::Renderer;
 use crate::core::renderer::renderer::Viewport;
 
+use rand::Rng;
 use sfml::window::{Event as SFMLEvent, Key};
 
 use core::any::Any;
@@ -61,10 +62,10 @@ fn update_title(e: &mut Entity, _app: &App, dt: f32) {
     }
 }
 
-fn handle_event(e: &mut Entity, ev: &Event) {
+fn handle_event(e: &mut Entity, app: &mut App, ev: &Event) {
     let card = e.find_component::<Image>("card").unwrap();
     match ev {
-        Event::SFMLEvent(e) => match e {
+        Event::SFMLEvent(ev) => match ev {
             SFMLEvent::MouseMoved { x, y } => {
                 card.x = *x;
                 card.y = *y;
@@ -81,6 +82,16 @@ fn handle_event(e: &mut Entity, ev: &Event) {
                 }
                 &Key::D => {
                     card.x += 10;
+                }
+                &Key::U => {
+                    let info = app.resource.load_image_from_disk(DISK_IMAGE_PATH).unwrap();
+                    let mut dynamic_cmp = Image::new("");
+                    dynamic_cmp.texture_id = Some(info.texture_id);
+                    dynamic_cmp.x = rand::thread_rng().gen_range(0..1000);
+                    dynamic_cmp.y = rand::thread_rng().gen_range(0..1000);
+                    dynamic_cmp.width = info.width;
+                    dynamic_cmp.height = info.height;
+                    e.add_component(dynamic_cmp);
                 }
                 _ => {}
             },
