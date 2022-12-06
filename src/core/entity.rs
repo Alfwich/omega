@@ -19,7 +19,7 @@ impl Default for EntityFns {
 
 #[derive(Default)]
 pub struct Entity {
-    name: String,
+    pub name: String,
     components: Vec<Box<dyn Component>>,
     children: Vec<Entity>,
     vtable: EntityFns,
@@ -64,7 +64,7 @@ impl Entity {
         Err(format!("Could not find component with name: {}", name))
     }
 
-    pub fn _find_child_by_name(&mut self, name: &str) -> Result<&mut Entity, String> {
+    pub fn find_child_by_name(&mut self, name: &str) -> Result<&mut Entity, String> {
         for child in &mut self.children {
             if child.name == name {
                 return Ok(child);

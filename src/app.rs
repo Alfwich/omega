@@ -1,6 +1,3 @@
-use sfml::system::Vector2i;
-use sfml::window::{Event, Key, Style, VideoMode, Window};
-
 use crate::core::component::pre_frame::PreFrame;
 use crate::core::entity::Entity;
 use crate::core::event::Event::{ImageLoadEvent, SFMLEvent};
@@ -10,6 +7,7 @@ use crate::core::resource::Resources;
 use crate::game::entities::title;
 use crate::game::state::GameState;
 use crate::util::timer::Timer;
+use sfml::window::{Event as SEvent, Key, Style, VideoMode, Window};
 
 pub struct App {
     pub state: GameState,
@@ -28,10 +26,10 @@ impl Default for App {
 fn handle_window_events(window: &mut Window, app: &mut App, root: &mut Entity) {
     while let Some(event) = window.poll_event() {
         match event {
-            Event::Closed => {
+            SEvent::Closed => {
                 window.close();
             }
-            Event::KeyPressed { code, .. } => match code {
+            SEvent::KeyPressed { code, .. } => match code {
                 Key::Q => {
                     window.close();
                 }

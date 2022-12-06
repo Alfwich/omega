@@ -1,0 +1,56 @@
+use crate::app::App;
+use crate::core::component::component::Component;
+use crate::core::entity::{Entity, EntityFns};
+use crate::core::event::Event;
+use crate::core::renderer::renderer::Renderer;
+use crate::core::renderer::renderer::Viewport;
+
+use core::any::Any;
+
+#[derive(Default, Debug, Clone, Copy)]
+struct Data {}
+
+impl Component for Data {
+    fn get_name(&self) -> &str {
+        return "data";
+    }
+
+    fn render(&self, _renderer: &Renderer) {}
+
+    fn as_any(&mut self) -> &mut dyn Any {
+        self
+    }
+}
+
+fn update_button(_e: &mut Entity, _app: &App, _dt: f32) {}
+fn handle_event(_e: &mut Entity, _app: &mut App, _ev: &Event) {}
+
+pub fn make_button(app: &mut App, _viewport: &Viewport) -> Entity {
+    let mut e = Entity::new(
+        "button",
+        EntityFns {
+            update_fn: update_button,
+            event_fn: handle_event,
+        },
+    );
+
+    e.add_component(Data::default());
+
+    {
+        let bg_image = app
+            .resource
+            .load_image_from_disk("res/img/button.png")
+            .unwrap();
+        let mut bg = crate::core::component::image::Image::with_texture(
+            "background",
+            bg_image.texture_id,
+            100,
+            100,
+        );
+        bg.x = 200;
+        bg.y = 200;
+        e.add_component(bg);
+    }
+
+    return e;
+}

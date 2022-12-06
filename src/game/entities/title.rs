@@ -7,6 +7,7 @@ use crate::core::entity::{Entity, EntityFns};
 use crate::core::event::{Event, ImageLoadEventPayload};
 use crate::core::renderer::renderer::Renderer;
 use crate::core::renderer::renderer::Viewport;
+use crate::game::entities::button::make_button;
 
 use rand::Rng;
 use sfml::window::{Event as SFMLEvent, Key};
@@ -56,9 +57,16 @@ fn update_title(e: &mut Entity, _app: &App, dt: f32) {
         card.rotation += dt * 4.;
     }
 
-    let beep = e.find_component::<AudioClip>("beep").unwrap();
-    if beep.sound.get_sound().status() == sfml::audio::SoundStatus::STOPPED {
-        beep.sound.get_sound().play();
+    {
+        let beep = e.find_component::<AudioClip>("beep").unwrap();
+        if beep.sound.get_sound().status() == sfml::audio::SoundStatus::STOPPED {
+            beep.sound.get_sound().play();
+        }
+    }
+    {
+        let button = e.find_child_by_name("test_button").unwrap();
+        let mut button_bg = button.find_component::<Image>("background").unwrap();
+        button_bg.x = 100 + (d.counter.sin() * 500.) as i32;
     }
 }
 
@@ -175,6 +183,12 @@ pub fn make_title(app: &mut App, viewport: &Viewport) -> Entity {
         let audio_data = app.resource.load_audio_data("res/snd/beep.wav").unwrap();
         let beep = AudioClip::new("beep", &audio_data);
         e.add_component(beep);
+    }
+
+    {
+        let mut button = make_button(app, viewport);
+        button.name = "test_button".to_string();
+        e.add_child(button);
     }
 
     return e;
