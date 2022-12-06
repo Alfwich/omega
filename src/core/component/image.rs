@@ -4,6 +4,7 @@ use crate::core::renderer::renderer::Renderer;
 use core::ffi::c_void;
 
 use gl::*;
+use glm::TVec3;
 extern crate nalgebra_glm as glm;
 
 use core::any::Any;
@@ -19,12 +20,15 @@ pub struct Image {
     pub rotation: f32,
     pub width: u32,
     pub height: u32,
+    pub color: TVec3<f32>,
 }
 
 impl Image {
     pub fn new(name: &str) -> Self {
         Image {
             name: name.to_string(),
+            scale: 1.,
+            color: glm::make_vec3(&[1., 1., 1.]),
             ..Default::default()
         }
     }
@@ -35,6 +39,8 @@ impl Image {
             texture_id: Some(texture_id),
             width,
             height,
+            scale: 1.,
+            color: glm::make_vec3(&[1., 1., 1.]),
             ..Default::default()
         }
     }
@@ -47,7 +53,11 @@ impl Component for Image {
 
     fn render(&self, renderer: &Renderer) {
         if let Some(texture_id) = self.texture_id {
-            let scale = glm::make_vec3(&[self.width as f32, self.height as f32, 1.]);
+            let scale = glm::make_vec3(&[
+                self.width as f32 * self.scale,
+                self.height as f32 * self.scale,
+                1.,
+            ]);
             let scale_model = glm::scale(&renderer.id, &scale);
             let rotate_vec = glm::make_vec3(&[0., 0., 1.]);
             let rotate_model = glm::rotate(&renderer.id, self.rotation, &rotate_vec);
@@ -71,6 +81,13 @@ impl Component for Image {
                     1,
                     FALSE,
                     mvp.data.as_slice().as_ptr(),
+                );
+                Uniform4f(
+                    renderer.gl.image_program_color_loc,
+                    self.color.x,
+                    self.color.y,
+                    self.color.z,
+                    1.0,
                 );
                 BindTexture(TEXTURE_2D, texture_id);
                 DrawElements(TRIANGLES, 6, UNSIGNED_INT, 0 as *const c_void);

@@ -19,6 +19,7 @@ pub struct AppGL {
     pub ebo: u32,
     pub image_program_id: u32,
     pub image_program_mvp_loc: i32,
+    pub image_program_color_loc: i32,
     pub text_program_id: u32,
     pub text_program_mvp_loc: i32,
 }
@@ -488,6 +489,10 @@ fn upload_buffer_data(vao: u32, vbo: u32, ebo: u32) {
     }
 }
 
+pub unsafe fn report_error(prefix: &str) {
+    println!("{}::glGetError: {}", prefix, GetError());
+}
+
 impl Default for AppGL {
     fn default() -> Self {
         // Init GL after GL context has been created
@@ -499,18 +504,23 @@ impl Default for AppGL {
             let vbo = gen_buffer();
             let ebo = gen_buffer();
             let image_program_id =
-                create_and_link_program("res/glsl/tilev.glsl", "res/glsl/tile.glsl");
+                create_and_link_program("res/glsl/imagev.glsl", "res/glsl/image.glsl");
             let text_program_id =
                 create_and_link_program("res/glsl/textv.glsl", "res/glsl/text.glsl");
 
             upload_buffer_data(vao, vbo, ebo);
 
             let mvp_name = "mvp\0".as_bytes();
+            let color_name = "color\0".as_bytes();
 
             let image_program_mvp_loc =
                 GetUniformLocation(image_program_id, mvp_name.as_ptr() as *const i8);
+            let image_program_color_loc =
+                GetUniformLocation(image_program_id, color_name.as_ptr() as *const i8);
             let text_program_mvp_loc =
                 GetUniformLocation(text_program_id, mvp_name.as_ptr() as *const i8);
+
+            report_error("gl-init");
 
             AppGL {
                 vao,
@@ -518,6 +528,7 @@ impl Default for AppGL {
                 ebo,
                 image_program_id,
                 image_program_mvp_loc,
+                image_program_color_loc,
                 text_program_id,
                 text_program_mvp_loc,
             }

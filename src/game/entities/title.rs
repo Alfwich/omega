@@ -65,8 +65,7 @@ fn update_title(e: &mut Entity, _app: &App, dt: f32) {
     }
     {
         let button = e.find_child_by_name("test_button").unwrap();
-        let mut button_bg = button.find_component::<Image>("background").unwrap();
-        button_bg.x = 100 + (d.counter.sin() * 500.) as i32;
+        let mut _button_bg = button.find_component::<Image>("background").unwrap();
     }
 }
 
@@ -99,6 +98,9 @@ fn handle_event(e: &mut Entity, app: &mut App, ev: &Event) {
                     dynamic_cmp.y = rand::thread_rng().gen_range(0..1000);
                     dynamic_cmp.width = info.width;
                     dynamic_cmp.height = info.height;
+                    dynamic_cmp.color.x = rand::thread_rng().gen_range(0f32..1f32);
+                    dynamic_cmp.color.y = rand::thread_rng().gen_range(0f32..1f32);
+                    dynamic_cmp.color.z = rand::thread_rng().gen_range(0f32..1f32);
                     e.add_component(dynamic_cmp);
                 }
                 _ => {}
@@ -151,8 +153,8 @@ pub fn make_title(app: &mut App, viewport: &Viewport) -> Entity {
     {
         app.resource.load_image_from_disk_async(DISK_IMAGE_PATH);
         let mut async_local = Image::new("async_local");
-        async_local.x = 500;
-        async_local.y = 500;
+        async_local.x = 1000;
+        async_local.y = 1000;
         e.add_component(async_local);
     }
 
