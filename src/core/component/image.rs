@@ -15,11 +15,11 @@ pub struct Image {
     pub scale: f32,
     pub border: f32,
     pub texture_id: Option<u32>,
-    pub x: i32,
-    pub y: i32,
+    pub x: f32,
+    pub y: f32,
     pub rotation: f32,
-    pub width: u32,
-    pub height: u32,
+    pub width: f32,
+    pub height: f32,
     pub color: TVec3<f32>,
 }
 
@@ -33,7 +33,7 @@ impl Image {
         }
     }
 
-    pub fn with_texture(name: &str, texture_id: u32, width: u32, height: u32) -> Self {
+    pub fn with_texture(name: &str, texture_id: u32, width: f32, height: f32) -> Self {
         Image {
             name: name.to_string(),
             texture_id: Some(texture_id),
@@ -53,22 +53,15 @@ impl Component for Image {
 
     fn render(&self, renderer: &Renderer) {
         if let Some(texture_id) = self.texture_id {
-            let scale = glm::make_vec3(&[
-                self.width as f32 * self.scale,
-                self.height as f32 * self.scale,
-                1.,
-            ]);
-            let scale_model = glm::scale(&renderer.id, &scale);
-            let rotate_vec = glm::make_vec3(&[0., 0., 1.]);
-            let rotate_model = glm::rotate(&renderer.id, self.rotation, &rotate_vec);
-            let mve = glm::make_vec3(&[
+            let mvp = renderer.make_mvp(
                 self.x as f32,
-                renderer.viewport.window_size.1 - self.y as f32,
-                0.,
-            ]);
-            let view = glm::translate(&renderer.id, &mve);
-            let model = rotate_model * scale_model;
-            let mvp = renderer.ortho * view * model;
+                self.y as f32,
+                self.width as f32,
+                self.height as f32,
+                self.rotation,
+                self.scale,
+                self.scale,
+            );
 
             unsafe {
                 Enable(BLEND);

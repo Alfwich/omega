@@ -40,18 +40,15 @@ impl Component for Text {
     }
 
     fn render(&self, renderer: &Renderer) {
-        let scale = glm::make_vec3(&[self.width as f32, self.height as f32, 1.]);
-        let scale_model = glm::scale(&renderer.id, &scale);
-        let rotate_vec = glm::make_vec3(&[0., 0., 1.]);
-        let rotate_model = glm::rotate(&renderer.id, self.rotation, &rotate_vec);
-        let mve = glm::make_vec3(&[
+        let mvp = renderer.make_mvp(
             self.x as f32,
-            renderer.viewport.window_size.1 - self.y as f32,
-            0.,
-        ]);
-        let view = glm::translate(&renderer.id, &mve);
-        let model = rotate_model * scale_model;
-        let mvp = renderer.ortho * view * model;
+            self.y as f32,
+            self.width as f32,
+            self.height as f32,
+            self.rotation,
+            1.,
+            1.,
+        );
 
         unsafe {
             Enable(BLEND);

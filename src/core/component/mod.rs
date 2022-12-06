@@ -2,4 +2,5 @@ pub mod audio_clip;
 pub mod component;
 pub mod image;
 pub mod pre_frame;
+pub mod render_offset;
 pub mod text;

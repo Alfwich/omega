@@ -72,7 +72,7 @@ pub fn run() {
     window.set_framerate_limit(0);
     window.set_vertical_sync_enabled(false);
 
-    let renderer = Renderer::new(window_size.0 as f32, window_size.1 as f32);
+    let mut renderer = Renderer::new(window_size.0 as f32, window_size.1 as f32);
     let mut frame_timer = Timer::default();
     let mut app = App::default();
 
@@ -88,7 +88,7 @@ pub fn run() {
             handle_window_events(&mut window, &mut app, &mut root);
             root.update(&app, dt);
             window.set_active(true);
-            root.render(&renderer);
+            root.render(&mut renderer);
             window.display();
         }
     }

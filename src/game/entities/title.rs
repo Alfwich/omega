@@ -13,6 +13,7 @@ use rand::Rng;
 use sfml::window::{Event as SFMLEvent, Key};
 
 use core::any::Any;
+use std::f32::consts::PI;
 
 #[derive(Default, Debug, Clone, Copy)]
 struct Data {
@@ -65,7 +66,8 @@ fn update_title(e: &mut Entity, _app: &App, dt: f32) {
     }
     {
         let button = e.find_child_by_name("test_button").unwrap();
-        let mut _button_bg = button.find_component::<Image>("background").unwrap();
+        button.render_offset.x = d.counter.cos() * 50. * PI * 2. + 300.;
+        button.render_offset.y = d.counter.sin() * 50. * PI * 2. + 300.;
     }
 }
 
@@ -74,30 +76,30 @@ fn handle_event(e: &mut Entity, app: &mut App, ev: &Event) {
     match ev {
         Event::SFMLEvent(ev) => match ev {
             SFMLEvent::MouseMoved { x, y } => {
-                card.x = *x;
-                card.y = *y;
+                card.x = *x as f32;
+                card.y = *y as f32;
             }
             SFMLEvent::KeyPressed { code, .. } => match code {
                 &Key::W => {
-                    card.y -= 10;
+                    card.y -= 10.;
                 }
                 &Key::A => {
-                    card.x -= 10;
+                    card.x -= 10.;
                 }
                 &Key::S => {
-                    card.y += 10;
+                    card.y += 10.;
                 }
                 &Key::D => {
-                    card.x += 10;
+                    card.x += 10.;
                 }
                 &Key::U => {
                     let info = app.resource.load_image_from_disk(DISK_IMAGE_PATH).unwrap();
                     let mut dynamic_cmp = Image::new("");
                     dynamic_cmp.texture_id = Some(info.texture_id);
-                    dynamic_cmp.x = rand::thread_rng().gen_range(0..1000);
-                    dynamic_cmp.y = rand::thread_rng().gen_range(0..1000);
-                    dynamic_cmp.width = info.width;
-                    dynamic_cmp.height = info.height;
+                    dynamic_cmp.x = rand::thread_rng().gen_range(0f32..1000f32);
+                    dynamic_cmp.y = rand::thread_rng().gen_range(0f32..1000f32);
+                    dynamic_cmp.width = info.width as f32;
+                    dynamic_cmp.height = info.height as f32;
                     dynamic_cmp.color.x = rand::thread_rng().gen_range(0f32..1f32);
                     dynamic_cmp.color.y = rand::thread_rng().gen_range(0f32..1f32);
                     dynamic_cmp.color.z = rand::thread_rng().gen_range(0f32..1f32);
@@ -110,13 +112,13 @@ fn handle_event(e: &mut Entity, app: &mut App, ev: &Event) {
         Event::ImageLoadEvent(ImageLoadEventPayload(url, id, width, height)) => {
             if url == REMOTE_IMAGE_URL {
                 card.texture_id = Some(*id);
-                card.width = *width;
-                card.height = *height;
+                card.width = *width as f32;
+                card.height = *height as f32;
             } else if url == DISK_IMAGE_PATH {
                 let async_local = e.find_component::<Image>("async_local").unwrap();
                 async_local.texture_id = Some(*id);
-                async_local.width = *width;
-                async_local.height = *height;
+                async_local.width = *width as f32;
+                async_local.height = *height as f32;
             }
         }
     }
@@ -142,19 +144,19 @@ pub fn make_title(app: &mut App, viewport: &Viewport) -> Entity {
         let mut image = Image::with_texture(
             "background",
             texture_info.texture_id,
-            texture_info.width,
-            texture_info.height,
+            texture_info.width as f32,
+            texture_info.height as f32,
         );
-        image.x = (viewport.window_size.0 / 2.) as i32;
-        image.y = (viewport.window_size.1 / 2.) as i32;
+        image.x = viewport.window_size.0 / 2.;
+        image.y = viewport.window_size.1 / 2.;
         e.add_component(image);
     }
 
     {
         app.resource.load_image_from_disk_async(DISK_IMAGE_PATH);
         let mut async_local = Image::new("async_local");
-        async_local.x = 1000;
-        async_local.y = 1000;
+        async_local.x = 1000.;
+        async_local.y = 1000.;
         e.add_component(async_local);
     }
 
