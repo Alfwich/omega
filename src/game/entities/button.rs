@@ -69,8 +69,6 @@ pub fn make_button(app: &mut App, _viewport: &Viewport) -> Entity {
             .load_image_from_disk("res/img/button.png")
             .unwrap();
         let mut bg = Image::with_texture("background", bg_image.texture_id, 100., 100.);
-        bg.x = 200.;
-        bg.y = 200.;
         e.add_component(bg);
     }
 

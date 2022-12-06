@@ -68,7 +68,7 @@ impl Renderer {
         let rotate_vec = glm::make_vec3(&[0., 0., 1.]);
         let rotate_model = glm::rotate(&self.id, rotation, &rotate_vec);
         let offset = self.get_offset();
-        let mve = glm::make_vec3(&[x + offset.0, self.viewport.window_size.1 - y + offset.1, 0.]);
+        let mve = glm::make_vec3(&[x + offset.0, self.viewport.window_size.1 - y - offset.1, 0.]);
         let view = glm::translate(&self.id, &mve);
         let model = rotate_model * scale_model;
         return self.ortho * view * model;
