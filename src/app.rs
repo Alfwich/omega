@@ -3,12 +3,12 @@ use crate::core::entity::Entity;
 use crate::core::event::Event::{ImageLoadEvent, SFMLEvent};
 use crate::core::event::ImageLoadEventPayload;
 use crate::core::renderer::renderer::Renderer;
+use crate::core::renderer::window::{make_window, WindowConfig, WindowStyle};
 use crate::core::resource::Resources;
-use crate::game::entities::title;
+use crate::game::scene::title;
 use crate::game::state::GameState;
 use crate::util::timer::Timer;
-use sfml::system::Vector2i;
-use sfml::window::{Event as SEvent, Key, Style, VideoMode, Window};
+use sfml::window::{Event as SEvent, Key, Window};
 
 pub struct App {
     pub state: GameState,
@@ -63,16 +63,13 @@ fn handle_window_events(window: &mut Window, app: &mut App, root: &mut Entity) {
 }
 
 pub fn run() {
-    let dvm = VideoMode::desktop_mode();
-    let window_size: (u32, u32) = (dvm.width, dvm.height);
+    let mut window_config = WindowConfig::default();
+    window_config.width = 1920;
+    window_config.height = 1080;
+    window_config.style = WindowStyle::Windowed;
+    let mut window = make_window(&window_config);
 
-    // Creates GL context internally
-    let mut window = Window::new(window_size, "Omega", Style::NONE, &Default::default());
-    window.set_position(Vector2i::new(0, 0));
-    window.set_framerate_limit(0);
-    window.set_vertical_sync_enabled(false);
-
-    let mut renderer = Renderer::new(window_size.0 as f32, window_size.1 as f32);
+    let mut renderer = Renderer::new(window_config.width as f32, window_config.height as f32);
     let mut frame_timer = Timer::default();
     let mut app = App::default();
 

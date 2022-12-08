@@ -7,7 +7,7 @@ use crate::core::entity::{Entity, EntityFns};
 use crate::core::event::{Event, ImageLoadEventPayload};
 use crate::core::renderer::renderer::Renderer;
 use crate::core::renderer::renderer::Viewport;
-use crate::game::entities::button::make_button;
+use crate::game::entity::button::make_button;
 
 use rand::Rng;
 use sfml::window::{Event as SFMLEvent, Key};
