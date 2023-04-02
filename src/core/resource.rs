@@ -1,7 +1,7 @@
 use crate::core::renderer::app_gl::*;
 use sfml::{audio::SoundBuffer, window::Context, SfBox};
 use std::sync::mpsc::{Receiver, Sender};
-use std::thread;
+use std::thread::{self, JoinHandle};
 use std::{
     cell::RefCell,
     collections::{HashMap, HashSet},
@@ -30,6 +30,7 @@ pub struct Resources {
     remote_image_loading: HashSet<String>,
     remote_image_work_tx: Sender<ImageLoadPayload>,
     remote_image_rx: Receiver<ImageLoadPayload>,
+    thread_proc_join_handle: Option<JoinHandle<()>>,
 }
 
 fn image_loading_proc_thread(rx: Receiver<ImageLoadPayload>, tx: Sender<ImageLoadPayload>) {
@@ -99,8 +100,6 @@ impl Default for Resources {
         let (in_tx, in_rx) = std::sync::mpsc::channel();
         let (out_tx, out_rx) = std::sync::mpsc::channel();
 
-        thread::spawn(move || image_loading_proc_thread(in_rx, out_tx));
-
         Resources {
             audio_data: HashMap::new(),
             texture_data: HashMap::new(),
@@ -108,6 +107,9 @@ impl Default for Resources {
             remote_image_loading: HashSet::new(),
             remote_image_work_tx: in_tx,
             remote_image_rx: out_rx,
+            thread_proc_join_handle: Some(thread::spawn(move || {
+                image_loading_proc_thread(in_rx, out_tx)
+            })),
         }
     }
 }
@@ -223,5 +225,12 @@ impl Drop for Resources {
         self.texture_data.clear();
         self.audio_data.clear();
         self.text_data.clear();
+
+        // Ensure resource thread cleans up
+        self.thread_proc_join_handle
+            .take()
+            .unwrap()
+            .join()
+            .expect("Resource Loading Thread to Join");
     }
 }

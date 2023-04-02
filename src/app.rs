@@ -62,31 +62,32 @@ fn handle_window_events(window: &mut Window, app: &mut App, root: &mut Entity) {
     }
 }
 
-pub fn run() {
-    let mut window_config = WindowConfig::default();
-    window_config.width = 1920;
-    window_config.height = 1080;
-    window_config.style = WindowStyle::Windowed;
-    let mut window = make_window(&window_config);
+impl App {
+    pub fn run(&mut self) {
+        let mut window_config = WindowConfig::default();
+        window_config.width = 1920;
+        window_config.height = 1080;
+        window_config.style = WindowStyle::Windowed;
+        let mut window = make_window(&window_config);
 
-    let mut renderer = Renderer::new(window_config.width as f32, window_config.height as f32);
-    let mut frame_timer = Timer::default();
-    let mut app = App::default();
+        let mut renderer = Renderer::new(window_config.width as f32, window_config.height as f32);
+        let mut frame_timer = Timer::default();
 
-    {
-        let mut root = Entity::default();
-        root.add_component(PreFrame::default());
-        root.add_child(title::make_title(&mut app, &renderer.viewport));
+        {
+            let mut root = Entity::default();
+            root.add_component(PreFrame::default());
+            root.add_child(title::make_title(self, &renderer.viewport));
 
-        while window.is_open() {
-            let dt = frame_timer.dt();
+            while window.is_open() {
+                let dt = frame_timer.dt();
 
-            //println!("fps: {}", 1. / dt);
-            handle_window_events(&mut window, &mut app, &mut root);
-            root.update(&app, dt);
-            window.set_active(true);
-            root.render(&mut renderer);
-            window.display();
+                //println!("fps: {}", 1. / dt);
+                handle_window_events(&mut window, self, &mut root);
+                root.update(self, dt);
+                window.set_active(true);
+                root.render(&mut renderer);
+                window.display();
+            }
         }
     }
 }

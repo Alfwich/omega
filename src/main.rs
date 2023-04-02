@@ -3,6 +3,8 @@ mod core;
 mod game;
 mod util;
 
+use app::App;
+
 fn main() {
-    app::run();
+    App::default().run();
 }
