@@ -227,10 +227,13 @@ impl Drop for Resources {
         self.text_data.clear();
 
         // Ensure resource thread cleans up
+        /*
+        // TODO(aw): Hangs on exit - fix this
         self.thread_proc_join_handle
             .take()
             .unwrap()
             .join()
             .expect("Resource Loading Thread to Join");
+        */
     }
 }

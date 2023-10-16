@@ -24,6 +24,7 @@ pub struct AppGL {
     pub text_program_mvp_loc: i32,
 }
 
+#[repr(C)]
 #[derive(Debug)]
 struct Vertex {
     pos: [f32; 3],
@@ -87,6 +88,9 @@ pub fn load_image_from_disk(path: &str) -> Result<ImageResult, String> {
                 Some(img_data) => {
                     let img_data_ptr = img_data.pixel_data().as_ptr() as *const c_void;
                     let size = img_data.size();
+
+                    println!("img_data_size: {:?}", size);
+
                     // RGBA since pixel_data pads to 4 channels
                     TexImage2D(
                         TEXTURE_2D,
@@ -500,27 +504,42 @@ impl Default for AppGL {
         load_with(|s| gl_loader::get_proc_address(s) as *const _);
 
         unsafe {
+            report_error("gl-init");
+
             let vao = gen_vertex_buffer();
+            report_error("gen vao");
+
             let vbo = gen_buffer();
+            report_error("gen vbo");
+
             let ebo = gen_buffer();
+            report_error("gen ebo");
+
             let image_program_id =
                 create_and_link_program("res/glsl/imagev.glsl", "res/glsl/image.glsl");
+            report_error("create_and_link_program image");
+
             let text_program_id =
                 create_and_link_program("res/glsl/textv.glsl", "res/glsl/text.glsl");
+            report_error("text");
 
             upload_buffer_data(vao, vbo, ebo);
+            report_error("upload buffer data");
 
             let mvp_name = "mvp\0".as_bytes();
             let color_name = "color\0".as_bytes();
 
             let image_program_mvp_loc =
                 GetUniformLocation(image_program_id, mvp_name.as_ptr() as *const i8);
+            report_error("image mvp");
+
             let image_program_color_loc =
                 GetUniformLocation(image_program_id, color_name.as_ptr() as *const i8);
+            report_error("image color");
+
             let text_program_mvp_loc =
                 GetUniformLocation(text_program_id, mvp_name.as_ptr() as *const i8);
-
-            report_error("gl-init");
+            report_error("text mvp");
 
             AppGL {
                 vao,

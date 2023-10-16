@@ -32,7 +32,7 @@ impl Component for Data {
     }
 }
 
-static REMOTE_IMAGE_URL: &str = "http://wuteri.ch/misc/visualguider/image/card/Teleport.jpg";
+static REMOTE_IMAGE_URL: &str = "http://wuteri.ch/img/Teleport.jpg";
 static DISK_IMAGE_PATH: &str = "res/img/motorcycle.png";
 
 fn update_title(e: &mut Entity, _app: &App, dt: f32) {
