@@ -30,7 +30,9 @@ pub struct Resources {
     remote_image_loading: HashSet<String>,
     remote_image_work_tx: Sender<ImageLoadPayload>,
     remote_image_rx: Receiver<ImageLoadPayload>,
-    thread_proc_join_handle: Option<JoinHandle<()>>,
+
+    // Drop join this
+    _thread_proc_join_handle: Option<JoinHandle<()>>,
 }
 
 fn image_loading_proc_thread(rx: Receiver<ImageLoadPayload>, tx: Sender<ImageLoadPayload>) {
@@ -107,7 +109,7 @@ impl Default for Resources {
             remote_image_loading: HashSet::new(),
             remote_image_work_tx: in_tx,
             remote_image_rx: out_rx,
-            thread_proc_join_handle: Some(thread::spawn(move || {
+            _thread_proc_join_handle: Some(thread::spawn(move || {
                 image_loading_proc_thread(in_rx, out_tx)
             })),
         }
@@ -225,15 +227,5 @@ impl Drop for Resources {
         self.texture_data.clear();
         self.audio_data.clear();
         self.text_data.clear();
-
-        // Ensure resource thread cleans up
-        /*
-        // TODO(aw): Hangs on exit - fix this
-        self.thread_proc_join_handle
-            .take()
-            .unwrap()
-            .join()
-            .expect("Resource Loading Thread to Join");
-        */
     }
 }
