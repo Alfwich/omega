@@ -94,14 +94,14 @@ impl Entity {
         }
     }
 
-    pub fn render(&self, renderer: &mut Renderer) {
+    pub fn render_components(&self, renderer: &mut Renderer) {
         renderer.push_offset(self.render_offset);
         for cmp in &self.components {
             cmp.render(renderer);
         }
 
         for ent in &self.children {
-            ent.render(renderer);
+            ent.render_components(renderer);
         }
         renderer.pop_offset();
     }

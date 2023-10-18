@@ -24,6 +24,10 @@ pub struct Image {
 }
 
 impl Image {
+    pub fn new_nameless() -> Self {
+        Self::new("")
+    }
+
     pub fn new(name: &str) -> Self {
         Image {
             name: name.to_string(),

@@ -94,7 +94,7 @@ fn handle_event(e: &mut Entity, app: &mut App, ev: &Event) {
                 }
                 &Key::U => {
                     let info = app.resource.load_image_from_disk(DISK_IMAGE_PATH).unwrap();
-                    let mut dynamic_cmp = Image::new("");
+                    let mut dynamic_cmp = Image::new_nameless();
                     dynamic_cmp.texture_id = Some(info.texture_id);
                     dynamic_cmp.x = rand::thread_rng().gen_range(0f32..1000f32);
                     dynamic_cmp.y = rand::thread_rng().gen_range(0f32..1000f32);
@@ -172,12 +172,17 @@ pub fn make_title(app: &mut App, viewport: &Viewport) -> Entity {
         text.y = (viewport.window_size.1 / 2.) as i32;
         e.add_component(text);
 
-        let d = 5;
+        let d = 25;
         for x in 1..d {
             for y in 1..d {
-                let mut t = Text::new("", &text_texture);
+                let i_texture = app
+                    .resource
+                    .load_text_texture(&format!("Omega {:?}:{:?}", x, y))
+                    .unwrap();
+                let mut t = Text::new("tester", &i_texture);
                 t.x = x * (viewport.window_size.0 as i32 / d);
                 t.y = y * (viewport.window_size.1 as i32 / d);
+                t.rotation = rand::thread_rng().gen_range(0f32..360f32);
                 e.add_component(t);
             }
         }

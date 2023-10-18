@@ -68,6 +68,7 @@ impl App {
         window_config.width = 1920;
         window_config.height = 1080;
         window_config.style = WindowStyle::Windowed;
+        window_config.vsync_enabled = false;
         let mut window = make_window(&window_config);
 
         let mut renderer = Renderer::new(window_config.width as f32, window_config.height as f32);
@@ -81,11 +82,11 @@ impl App {
             while window.is_open() {
                 let dt = frame_timer.dt();
 
-                //println!("fps: {}", 1. / dt);
+                println!("fps: {}", 1. / dt);
                 handle_window_events(&mut window, self, &mut root);
                 root.update(self, dt);
                 window.set_active(true);
-                root.render(&mut renderer);
+                root.render_components(&mut renderer);
                 window.display();
             }
         }
