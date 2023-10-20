@@ -1,7 +1,7 @@
 use crate::app::App;
 use crate::core::component::audio_clip::AudioClip;
 use crate::core::component::component::Component;
-use crate::core::component::image::Image;
+use crate::core::component::image::{Image, ImageRenderRect};
 use crate::core::component::text::Text;
 use crate::core::entity::{Entity, EntityFns};
 use crate::core::event::{Event, ImageLoadEventPayload};
@@ -172,7 +172,7 @@ pub fn make_title(app: &mut App, viewport: &Viewport) -> Entity {
         text.y = (viewport.window_size.1 / 2.) as i32;
         e.add_component(text);
 
-        let d = 25;
+        let d = 3;
         for x in 1..d {
             for y in 1..d {
                 let i_texture = app
@@ -182,7 +182,6 @@ pub fn make_title(app: &mut App, viewport: &Viewport) -> Entity {
                 let mut t = Text::new("tester", &i_texture);
                 t.x = x * (viewport.window_size.0 as i32 / d);
                 t.y = y * (viewport.window_size.1 as i32 / d);
-                t.rotation = rand::thread_rng().gen_range(0f32..360f32);
                 e.add_component(t);
             }
         }
@@ -198,6 +197,24 @@ pub fn make_title(app: &mut App, viewport: &Viewport) -> Entity {
         let mut button = make_button(app, viewport);
         button.name = "test_button".to_string();
         e.add_child(button);
+    }
+
+    {
+        let texture_info = app
+            .resource
+            .load_image_from_disk("res/img/test-clip.png")
+            .unwrap();
+
+        let mut image = Image::with_texture("test-clip", texture_info.texture_id, 512.0, 512.0);
+        image.x = viewport.window_size.0 / 2.;
+        image.y = viewport.window_size.1 / 2.;
+        image.r_rect = Some(ImageRenderRect {
+            x: 0.0,
+            y: 0.5,
+            w: 0.5,
+            h: 0.5,
+        });
+        e.add_component(image);
     }
 
     return e;

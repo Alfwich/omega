@@ -17,9 +17,12 @@ pub struct AppGL {
     pub vao: u32,
     pub vbo: u32,
     pub ebo: u32,
+
     pub image_program_id: u32,
     pub image_program_mvp_loc: i32,
     pub image_program_color_loc: i32,
+    pub image_program_uv_rect_loc: i32,
+
     pub text_program_id: u32,
     pub text_program_mvp_loc: i32,
 }
@@ -528,6 +531,7 @@ impl Default for AppGL {
 
             let mvp_name = "mvp\0".as_bytes();
             let color_name = "color\0".as_bytes();
+            let uv_rect = "uv_rect\0".as_bytes();
 
             let image_program_mvp_loc =
                 GetUniformLocation(image_program_id, mvp_name.as_ptr() as *const i8);
@@ -537,6 +541,10 @@ impl Default for AppGL {
                 GetUniformLocation(image_program_id, color_name.as_ptr() as *const i8);
             report_error("image color");
 
+            let image_program_uv_rect_loc =
+                GetUniformLocation(image_program_id, uv_rect.as_ptr() as *const i8);
+            report_error("image uv_rect");
+
             let text_program_mvp_loc =
                 GetUniformLocation(text_program_id, mvp_name.as_ptr() as *const i8);
             report_error("text mvp");
@@ -545,9 +553,12 @@ impl Default for AppGL {
                 vao,
                 vbo,
                 ebo,
+
                 image_program_id,
                 image_program_mvp_loc,
                 image_program_color_loc,
+                image_program_uv_rect_loc,
+
                 text_program_id,
                 text_program_mvp_loc,
             }

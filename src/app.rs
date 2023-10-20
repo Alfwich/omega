@@ -82,7 +82,7 @@ impl App {
             while window.is_open() {
                 let dt = frame_timer.dt();
 
-                println!("fps: {}", 1. / dt);
+                //println!("fps: {}", 1. / dt);
                 handle_window_events(&mut window, self, &mut root);
                 root.update(self, dt);
                 window.set_active(true);

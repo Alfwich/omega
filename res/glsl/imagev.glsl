@@ -6,11 +6,12 @@ out vec2 uv;
 out vec4 c_mod;
 
 uniform mat4 mvp;
+uniform vec4 uv_rect;
 uniform vec4 color;
 
 void main()
 {
    gl_Position = mvp * vec4(in_pos.xyz, 1.0);
-   uv = in_uv;
+   uv = in_uv * uv_rect.zw + uv_rect.xy;
    c_mod = vec4(color.xyz, 1.0);
 }
