@@ -70,6 +70,15 @@ impl Image {
             ..Default::default()
         }
     }
+
+    pub fn apply_image(
+        &mut self,
+        image_load_event_payload: &crate::core::event::ImageLoadEventPayload,
+    ) {
+        self.texture_id = Some(image_load_event_payload.texture_id);
+        self.width = image_load_event_payload.width as f32;
+        self.height = image_load_event_payload.height as f32;
+    }
 }
 
 impl Component for Image {

@@ -497,7 +497,12 @@ fn upload_buffer_data(vao: u32, vbo: u32, ebo: u32) {
 }
 
 pub unsafe fn report_error(prefix: &str) {
-    println!("{}::glGetError: {}", prefix, GetError());
+    let mut error = GetError();
+
+    while error != 0 {
+        println!("app_gl ERROR[{}]: {}", prefix, GetError());
+        error = GetError();
+    }
 }
 
 impl Default for AppGL {

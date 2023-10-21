@@ -46,12 +46,12 @@ fn handle_window_events(window: &mut Window, app: &mut App, root: &mut Entity) {
     loop {
         if let Some(image_load_result) = app.resource.recv_load_events() {
             let load_info = image_load_result.1;
-            image_load_events.push(ImageLoadEvent(ImageLoadEventPayload(
-                image_load_result.0,
-                load_info.texture_id,
-                load_info.width,
-                load_info.height,
-            )));
+            image_load_events.push(ImageLoadEvent(ImageLoadEventPayload {
+                url: image_load_result.0,
+                texture_id: load_info.texture_id,
+                width: load_info.width,
+                height: load_info.height,
+            }));
         } else {
             break;
         }

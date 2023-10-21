@@ -34,6 +34,7 @@ impl Component for Data {
 
 static REMOTE_IMAGE_URL: &str = "http://wuteri.ch/img/Teleport.jpg";
 static DISK_IMAGE_PATH: &str = "res/img/motorcycle.png";
+static DISK_IMAGE_QUAD: &str = "res/img/test-clip.png";
 
 fn update_title(e: &mut Entity, _app: &App, dt: f32) {
     let d;
@@ -41,11 +42,6 @@ fn update_title(e: &mut Entity, _app: &App, dt: f32) {
         let data = e.find_component::<Data>("data").unwrap();
         data.counter += dt;
         d = data.clone();
-    }
-
-    {
-        let img = e.find_component::<Image>("background").unwrap();
-        img.rotation = d.counter.sin();
     }
 
     {
@@ -109,16 +105,15 @@ fn handle_event(e: &mut Entity, app: &mut App, ev: &Event) {
             },
             _ => {}
         },
-        Event::ImageLoadEvent(ImageLoadEventPayload(url, id, width, height)) => {
-            if url == REMOTE_IMAGE_URL {
-                card.texture_id = Some(*id);
-                card.width = *width as f32;
-                card.height = *height as f32;
-            } else if url == DISK_IMAGE_PATH {
+        Event::ImageLoadEvent(img_data) => {
+            if img_data.url == REMOTE_IMAGE_URL {
+                card.apply_image(img_data);
+            } else if img_data.url == DISK_IMAGE_PATH {
                 let async_local = e.find_component::<Image>("async_local").unwrap();
-                async_local.texture_id = Some(*id);
-                async_local.width = *width as f32;
-                async_local.height = *height as f32;
+                async_local.apply_image(img_data)
+            } else if img_data.url == DISK_IMAGE_QUAD {
+                let quad_cmp = e.find_component::<Image>("test-clip").unwrap();
+                quad_cmp.apply_image(img_data)
             }
         }
     }
@@ -200,12 +195,9 @@ pub fn make_title(app: &mut App, viewport: &Viewport) -> Entity {
     }
 
     {
-        let texture_info = app
-            .resource
-            .load_image_from_disk("res/img/test-clip.png")
-            .unwrap();
+        app.resource.load_image_from_disk_async(DISK_IMAGE_QUAD);
 
-        let mut image = Image::with_texture("test-clip", texture_info.texture_id, 512.0, 512.0);
+        let mut image = Image::new("test-clip");
         image.x = viewport.window_size.0 / 2.;
         image.y = viewport.window_size.1 / 2.;
         image.r_rect = Some(ImageRenderRect {
