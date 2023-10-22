@@ -1,12 +1,11 @@
 use crate::app::App;
 use crate::core::component::component::Component;
+use crate::core::component::render_offset::RenderOffset;
 use crate::core::event::Event;
 use crate::core::renderer::renderer::Renderer;
 
-use super::component::render_offset::RenderOffset;
-
 pub struct EntityFns {
-    pub update_fn: fn(&mut Entity, &App, dt: f32),
+    pub update_fn: fn(&mut Entity, &App, f32),
     pub event_fn: fn(&mut Entity, &mut App, &Event),
 }
 

@@ -1,5 +1,5 @@
 use crate::core::component::pre_frame::PreFrame;
-use crate::core::entity::Entity;
+use crate::core::entity::entity::Entity;
 use crate::core::event::Event::{ImageLoadEvent, SFMLEvent};
 use crate::core::event::ImageLoadEventPayload;
 use crate::core::renderer::renderer::Renderer;

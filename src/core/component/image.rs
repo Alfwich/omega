@@ -9,7 +9,7 @@ extern crate nalgebra_glm as glm;
 
 use core::any::Any;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ImageRenderRect {
     pub x: f32,
     pub y: f32,
@@ -88,15 +88,26 @@ impl Component for Image {
 
     fn render(&self, renderer: &Renderer) {
         if let Some(texture_id) = self.texture_id {
-            let mvp = renderer.make_mvp(
-                self.x as f32,
-                self.y as f32,
-                self.width as f32,
-                self.height as f32,
-                self.rotation,
-                self.scale,
-                self.scale,
-            );
+            let mvp = match &self.r_rect {
+                Some(r) => renderer.make_mvp(
+                    self.x as f32,
+                    self.y as f32,
+                    r.w as f32,
+                    r.h as f32,
+                    self.rotation,
+                    self.scale,
+                    self.scale,
+                ),
+                _ => renderer.make_mvp(
+                    self.x as f32,
+                    self.y as f32,
+                    self.width as f32,
+                    self.height as f32,
+                    self.rotation,
+                    self.scale,
+                    self.scale,
+                ),
+            };
 
             unsafe {
                 Enable(BLEND);

@@ -3,7 +3,8 @@ use crate::core::component::audio_clip::AudioClip;
 use crate::core::component::component::Component;
 use crate::core::component::image::{Image, ImageRenderRect};
 use crate::core::component::text::Text;
-use crate::core::entity::{Entity, EntityFns};
+use crate::core::entity::animated_image::{self, make_animated_image};
+use crate::core::entity::entity::{Entity, EntityFns};
 use crate::core::event::Event;
 use crate::core::renderer::renderer::Renderer;
 use crate::core::renderer::renderer::Viewport;
@@ -35,6 +36,7 @@ impl Component for Data {
 static REMOTE_IMAGE_URL: &str = "http://wuteri.ch/img/Teleport.jpg";
 static DISK_IMAGE_PATH: &str = "res/img/motorcycle.png";
 static DISK_IMAGE_QUAD: &str = "res/img/test-clip.png";
+static DISK_IMAGE_MARIO: &str = "res/img/mario.png";
 
 fn update_title(e: &mut Entity, _app: &App, dt: f32) {
     let d;
@@ -240,6 +242,14 @@ pub fn make_title(app: &mut App, viewport: &Viewport) -> Entity {
             h: 256.,
         });
         e.add_component(image);
+    }
+
+    {
+        let mut animated_image =
+            make_animated_image(app, "test-animated", DISK_IMAGE_MARIO, 36., 28.);
+        animated_image.render_offset.x = 500.;
+        animated_image.render_offset.y = 500.;
+        e.add_child(animated_image);
     }
 
     return e;
