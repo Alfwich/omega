@@ -41,7 +41,7 @@ pub struct Image {
     pub height: f32,
     pub color: TVec3<f32>,
 
-    // Optional Section of the image to render
+    // Optional Section of the image to render in screen space
     pub r_rect: Option<ImageRenderRect>,
 }
 
@@ -122,7 +122,13 @@ impl Component for Image {
 
                 match &self.r_rect {
                     Some(r) => {
-                        Uniform4f(renderer.gl.image_program_uv_rect_loc, r.x, r.y, r.w, r.h);
+                        // Convert screen space rect to render space
+                        // 256, 256 ,256 ,256 => (0.5, 0.5, 0.5, 0.5) @ 512x512
+                        let x = r.x / self.width;
+                        let y = r.y / self.height;
+                        let w = r.w / self.width;
+                        let h = r.h / self.height;
+                        Uniform4f(renderer.gl.image_program_uv_rect_loc, x, y, w, h);
                     }
                     _ => {
                         // Default rect which renders the whole image

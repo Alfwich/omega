@@ -4,7 +4,7 @@ use crate::core::component::component::Component;
 use crate::core::component::image::{Image, ImageRenderRect};
 use crate::core::component::text::Text;
 use crate::core::entity::{Entity, EntityFns};
-use crate::core::event::{Event, ImageLoadEventPayload};
+use crate::core::event::Event;
 use crate::core::renderer::renderer::Renderer;
 use crate::core::renderer::renderer::Viewport;
 use crate::game::entity::button::make_button;
@@ -65,6 +65,38 @@ fn update_title(e: &mut Entity, _app: &App, dt: f32) {
         button.render_offset.x = d.counter.cos() * 50. * PI * 2. + 300.;
         button.render_offset.y = d.counter.sin() * 50. * PI * 2. + 300.;
     }
+    {
+        let test_quad = e.find_component::<Image>("test-quad").unwrap();
+        let idx = (d.counter as u32) % 4;
+        let new_rect = match idx {
+            0 => ImageRenderRect {
+                x: 0.,
+                y: 0.,
+                w: 256.,
+                h: 256.,
+            },
+            1 => ImageRenderRect {
+                x: 256.,
+                y: 0.,
+                w: 256.,
+                h: 256.,
+            },
+            2 => ImageRenderRect {
+                x: 0.,
+                y: 256.,
+                w: 256.,
+                h: 256.,
+            },
+            3 => ImageRenderRect {
+                x: 256.,
+                y: 256.,
+                w: 256.,
+                h: 256.,
+            },
+            _ => ImageRenderRect::default(),
+        };
+        test_quad.r_rect = Some(new_rect);
+    }
 }
 
 fn handle_event(e: &mut Entity, app: &mut App, ev: &Event) {
@@ -91,14 +123,15 @@ fn handle_event(e: &mut Entity, app: &mut App, ev: &Event) {
                 &Key::U => {
                     let info = app.resource.load_image_from_disk(DISK_IMAGE_PATH).unwrap();
                     let mut dynamic_cmp = Image::new_nameless();
+                    let mut thread_rng = rand::thread_rng();
                     dynamic_cmp.texture_id = Some(info.texture_id);
-                    dynamic_cmp.x = rand::thread_rng().gen_range(0f32..1000f32);
-                    dynamic_cmp.y = rand::thread_rng().gen_range(0f32..1000f32);
+                    dynamic_cmp.x = thread_rng.gen_range(0f32..1000f32);
+                    dynamic_cmp.y = thread_rng.gen_range(0f32..1000f32);
                     dynamic_cmp.width = info.width as f32;
                     dynamic_cmp.height = info.height as f32;
-                    dynamic_cmp.color.x = rand::thread_rng().gen_range(0f32..1f32);
-                    dynamic_cmp.color.y = rand::thread_rng().gen_range(0f32..1f32);
-                    dynamic_cmp.color.z = rand::thread_rng().gen_range(0f32..1f32);
+                    dynamic_cmp.color.x = thread_rng.gen_range(0f32..1f32);
+                    dynamic_cmp.color.y = thread_rng.gen_range(0f32..1f32);
+                    dynamic_cmp.color.z = thread_rng.gen_range(0f32..1f32);
                     e.add_component(dynamic_cmp);
                 }
                 _ => {}
@@ -112,7 +145,7 @@ fn handle_event(e: &mut Entity, app: &mut App, ev: &Event) {
                 let async_local = e.find_component::<Image>("async_local").unwrap();
                 async_local.apply_image(img_data)
             } else if img_data.url == DISK_IMAGE_QUAD {
-                let quad_cmp = e.find_component::<Image>("test-clip").unwrap();
+                let quad_cmp = e.find_component::<Image>("test-quad").unwrap();
                 quad_cmp.apply_image(img_data)
             }
         }
@@ -197,14 +230,14 @@ pub fn make_title(app: &mut App, viewport: &Viewport) -> Entity {
     {
         app.resource.load_image_from_disk_async(DISK_IMAGE_QUAD);
 
-        let mut image = Image::new("test-clip");
+        let mut image = Image::new("test-quad");
         image.x = viewport.window_size.0 / 2.;
         image.y = viewport.window_size.1 / 2.;
         image.r_rect = Some(ImageRenderRect {
-            x: 0.0,
-            y: 0.5,
-            w: 0.5,
-            h: 0.5,
+            x: 256.,
+            y: 256.,
+            w: 256.,
+            h: 256.,
         });
         e.add_component(image);
     }
