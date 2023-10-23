@@ -35,7 +35,7 @@ struct Vertex {
 }
 
 #[derive(Default, Debug, Copy, Clone)]
-pub struct ImageResult {
+pub struct Texture {
     pub texture_id: u32,
     pub width: u32,
     pub height: u32,
@@ -60,7 +60,7 @@ impl Default for TextTextureData {
     }
 }
 
-pub fn load_image_from_disk(path: &str) -> Result<ImageResult, String> {
+pub fn load_image_from_disk(path: &str) -> Result<Texture, String> {
     let mut f = File::open(path).unwrap();
     let mut img_bytes = Vec::new();
     f.read_to_end(&mut img_bytes).unwrap();
@@ -108,7 +108,7 @@ pub fn load_image_from_disk(path: &str) -> Result<ImageResult, String> {
                     );
                     GenerateMipmap(TEXTURE_2D);
                     BindTexture(TEXTURE_2D, 0);
-                    return Ok(ImageResult {
+                    return Ok(Texture {
                         texture_id: id,
                         width: size.x,
                         height: size.y,
@@ -129,7 +129,7 @@ pub fn load_image_from_disk(path: &str) -> Result<ImageResult, String> {
 pub fn load_image_from_url(
     client: &reqwest::blocking::Client,
     url: &str,
-) -> Result<ImageResult, String> {
+) -> Result<Texture, String> {
     match client.get(url).send() {
         Ok(response) => {
             let resp = response.bytes();
@@ -175,7 +175,7 @@ pub fn load_image_from_url(
                             );
                             GenerateMipmap(TEXTURE_2D);
                             BindTexture(TEXTURE_2D, 0);
-                            return Ok(ImageResult {
+                            return Ok(Texture {
                                 texture_id: id,
                                 width: img_size.x,
                                 height: img_size.y,
@@ -279,7 +279,7 @@ fn sw_render_text_to_buffer(str: &str, data: &mut TextTextureData) {
     );
 }
 
-pub fn render_text_to_texture(str: &str) -> Result<ImageResult, &str> {
+pub fn render_text_to_texture(str: &str) -> Result<Texture, &str> {
     unsafe {
         let mut id: u32 = 0;
         GenTextures(1, &mut id);
@@ -324,7 +324,7 @@ pub fn render_text_to_texture(str: &str) -> Result<ImageResult, &str> {
         GenerateMipmap(TEXTURE_2D);
         BindTexture(TEXTURE_2D, 0);
 
-        Ok(ImageResult {
+        Ok(Texture {
             texture_id: id,
             width: texture_data.width as u32,
             height: texture_data.height as u32,

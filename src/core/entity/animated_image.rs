@@ -1,20 +1,16 @@
 use crate::app::App;
-use crate::core::component::audio_clip::AudioClip;
 use crate::core::component::component::Component;
 use crate::core::component::image::{Image, ImageRenderRect};
-use crate::core::component::text;
 use crate::core::entity::entity::{Entity, EntityFns};
 use crate::core::event::Event;
 use crate::core::renderer::renderer::Renderer;
-use crate::core::renderer::renderer::Viewport;
-
-use sfml::window::Event as SFMLEvent;
 
 use core::any::Any;
 
 #[derive(Default, Debug, Clone)]
 struct Data {
-    frame: u32,
+    timer: f32,
+    frame: usize,
     frames: Vec<ImageRenderRect>,
 }
 
@@ -30,8 +26,19 @@ impl Component for Data {
     }
 }
 
-fn update_animated_image(e: &mut Entity, _app: &App, _dt: f32) {
-    let _data = e.find_component::<Data>("data").unwrap();
+fn update_animated_image(e: &mut Entity, _app: &App, dt: f32) {
+    let data;
+    {
+        let d = e.find_component::<Data>("data").unwrap();
+        d.timer += dt * 2.;
+        d.frame = d.timer as usize % d.frames.len();
+        data = d.clone();
+    }
+
+    {
+        let img = e.find_component::<Image>("ai-texture").unwrap();
+        img.r_rect = Some(data.frames[data.frame].clone());
+    }
 }
 
 fn handle_event(e: &mut Entity, _app: &mut App, ev: &Event) {
@@ -74,17 +81,17 @@ pub fn make_animated_image(
                     w: width,
                     h: height,
                 });
-                x_pos += (width as u32);
+                x_pos += width as u32;
             }
             x_pos = 0;
-            y_pos += (height as u32);
+            y_pos += height as u32;
         }
 
         e.add_component(d);
     }
 
     {
-        let mut img = Image::with_texture("ai_tex", texture_info.texture_id, width, height);
+        let mut img = Image::with_texture("ai-texture", &texture_info, width, height);
         img.r_rect = Some(ImageRenderRect {
             x: 0.,
             y: 0.,

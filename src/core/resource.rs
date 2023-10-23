@@ -25,8 +25,8 @@ pub struct ImageLoadPayload {
 
 pub struct Resources {
     pub audio_data: HashMap<String, RefCell<SfBox<SoundBuffer>>>,
-    pub texture_data: HashMap<String, ImageResult>,
-    pub text_data: HashMap<String, ImageResult>,
+    pub texture_data: HashMap<String, Texture>,
+    pub text_data: HashMap<String, Texture>,
     remote_image_loading: HashSet<String>,
     remote_image_work_tx: Sender<ImageLoadPayload>,
     remote_image_rx: Receiver<ImageLoadPayload>,
@@ -122,7 +122,7 @@ impl Resources {
             Ok(payload) => {
                 self.texture_data.insert(
                     payload.path.clone(),
-                    ImageResult {
+                    Texture {
                         texture_id: payload.texture_id,
                         width: payload.width,
                         height: payload.height,
@@ -150,7 +150,7 @@ impl Resources {
         Ok(&self.audio_data[audio_file_path])
     }
 
-    pub fn load_image_from_disk(&mut self, image_file_path: &str) -> Result<ImageResult, String> {
+    pub fn load_image_from_disk(&mut self, image_file_path: &str) -> Result<Texture, String> {
         if let Some(id) = self.texture_data.get(&image_file_path.to_string()) {
             Ok(*id)
         } else {
@@ -164,7 +164,7 @@ impl Resources {
         let texture_data = *self
             .texture_data
             .get(image_path)
-            .unwrap_or(&ImageResult::default());
+            .unwrap_or(&Texture::default());
         let image_is_loading = self.remote_image_loading.contains(&image_path.to_string());
         if texture_data.texture_id != 0 || image_is_loading {
             return;
@@ -186,7 +186,7 @@ impl Resources {
         let texture_info = *self
             .texture_data
             .get(image_url)
-            .unwrap_or(&ImageResult::default());
+            .unwrap_or(&Texture::default());
         let remote_image_is_loading = self.remote_image_loading.contains(&image_url.to_string());
         if texture_info.texture_id != 0 || remote_image_is_loading {
             return;
@@ -204,7 +204,7 @@ impl Resources {
         }
     }
 
-    pub fn load_text_texture(&mut self, text: &str) -> Result<ImageResult, String> {
+    pub fn load_text_texture(&mut self, text: &str) -> Result<Texture, String> {
         if let Some(id) = self.text_data.get(&text.to_string()) {
             return Ok(*id);
         } else {

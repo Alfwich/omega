@@ -1,4 +1,5 @@
 use crate::core::component::component::Component;
+use crate::core::renderer::app_gl::Texture;
 use crate::core::renderer::renderer::Renderer;
 
 use core::ffi::c_void;
@@ -8,6 +9,8 @@ use glm::TVec3;
 extern crate nalgebra_glm as glm;
 
 use core::any::Any;
+
+use super::text;
 
 #[derive(Debug, Clone)]
 pub struct ImageRenderRect {
@@ -33,7 +36,7 @@ pub struct Image {
     pub name: String,
     pub scale: f32,
     pub border: f32,
-    pub texture_id: Option<u32>,
+    pub texture: Option<Texture>,
     pub x: f32,
     pub y: f32,
     pub rotation: f32,
@@ -59,10 +62,10 @@ impl Image {
         }
     }
 
-    pub fn with_texture(name: &str, texture_id: u32, width: f32, height: f32) -> Self {
+    pub fn with_texture(name: &str, texture: &Texture, width: f32, height: f32) -> Self {
         Image {
             name: name.to_string(),
-            texture_id: Some(texture_id),
+            texture: Some(texture.clone()),
             width,
             height,
             scale: 1.,
@@ -75,7 +78,11 @@ impl Image {
         &mut self,
         image_load_event_payload: &crate::core::event::ImageLoadEventPayload,
     ) {
-        self.texture_id = Some(image_load_event_payload.texture_id);
+        self.texture = Some(Texture {
+            texture_id: image_load_event_payload.texture_id,
+            width: image_load_event_payload.width,
+            height: image_load_event_payload.height,
+        });
         self.width = image_load_event_payload.width as f32;
         self.height = image_load_event_payload.height as f32;
     }
@@ -87,27 +94,16 @@ impl Component for Image {
     }
 
     fn render(&self, renderer: &Renderer) {
-        if let Some(texture_id) = self.texture_id {
-            let mvp = match &self.r_rect {
-                Some(r) => renderer.make_mvp(
-                    self.x as f32,
-                    self.y as f32,
-                    r.w as f32,
-                    r.h as f32,
-                    self.rotation,
-                    self.scale,
-                    self.scale,
-                ),
-                _ => renderer.make_mvp(
-                    self.x as f32,
-                    self.y as f32,
-                    self.width as f32,
-                    self.height as f32,
-                    self.rotation,
-                    self.scale,
-                    self.scale,
-                ),
-            };
+        if let Some(texture) = self.texture {
+            let mvp = renderer.make_mvp(
+                self.x as f32,
+                self.y as f32,
+                self.width as f32,
+                self.height as f32,
+                self.rotation,
+                self.scale,
+                self.scale,
+            );
 
             unsafe {
                 Enable(BLEND);
@@ -135,10 +131,10 @@ impl Component for Image {
                     Some(r) => {
                         // Convert screen space rect to render space
                         // 256, 256 ,256 ,256 => (0.5, 0.5, 0.5, 0.5) @ 512x512
-                        let x = r.x / self.width;
-                        let y = r.y / self.height;
-                        let w = r.w / self.width;
-                        let h = r.h / self.height;
+                        let x = r.x / texture.width as f32;
+                        let y = r.y / texture.height as f32;
+                        let w = r.w / texture.width as f32;
+                        let h = r.h / texture.height as f32;
                         Uniform4f(renderer.gl.image_program_uv_rect_loc, x, y, w, h);
                     }
                     _ => {
@@ -147,7 +143,7 @@ impl Component for Image {
                     }
                 };
 
-                BindTexture(TEXTURE_2D, texture_id);
+                BindTexture(TEXTURE_2D, texture.texture_id);
                 DrawElements(TRIANGLES, 6, UNSIGNED_INT, 0 as *const c_void);
             }
         }

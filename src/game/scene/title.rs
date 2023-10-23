@@ -3,7 +3,7 @@ use crate::core::component::audio_clip::AudioClip;
 use crate::core::component::component::Component;
 use crate::core::component::image::{Image, ImageRenderRect};
 use crate::core::component::text::Text;
-use crate::core::entity::animated_image::{self, make_animated_image};
+use crate::core::entity::animated_image::make_animated_image;
 use crate::core::entity::entity::{Entity, EntityFns};
 use crate::core::event::Event;
 use crate::core::renderer::renderer::Renderer;
@@ -126,7 +126,7 @@ fn handle_event(e: &mut Entity, app: &mut App, ev: &Event) {
                     let info = app.resource.load_image_from_disk(DISK_IMAGE_PATH).unwrap();
                     let mut dynamic_cmp = Image::new_nameless();
                     let mut thread_rng = rand::thread_rng();
-                    dynamic_cmp.texture_id = Some(info.texture_id);
+                    dynamic_cmp.texture = Some(info);
                     dynamic_cmp.x = thread_rng.gen_range(0f32..1000f32);
                     dynamic_cmp.y = thread_rng.gen_range(0f32..1000f32);
                     dynamic_cmp.width = info.width as f32;
@@ -173,7 +173,7 @@ pub fn make_title(app: &mut App, viewport: &Viewport) -> Entity {
 
         let mut image = Image::with_texture(
             "background",
-            texture_info.texture_id,
+            &texture_info,
             texture_info.width as f32,
             texture_info.height as f32,
         );
@@ -246,7 +246,7 @@ pub fn make_title(app: &mut App, viewport: &Viewport) -> Entity {
 
     {
         let mut animated_image =
-            make_animated_image(app, "test-animated", DISK_IMAGE_MARIO, 36., 28.);
+            make_animated_image(app, "test-animated", DISK_IMAGE_MARIO, 35., 27.);
         animated_image.render_offset.x = 500.;
         animated_image.render_offset.y = 500.;
         e.add_child(animated_image);
