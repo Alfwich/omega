@@ -16,7 +16,7 @@ struct Data {
 
 impl Component for Data {
     fn get_name(&self) -> &str {
-        return "data";
+        "data"
     }
 
     fn render(&self, _renderer: &Renderer) {}
@@ -41,11 +41,9 @@ fn update_animated_image(e: &mut Entity, _app: &App, dt: f32) {
     }
 }
 
-fn handle_event(e: &mut Entity, _app: &mut App, ev: &Event) {
+fn handle_event(e: &mut Entity, _app: &mut App, _ev: &Event) {
     let _data = e.find_component::<Data>("data").unwrap();
-    match ev {
-        _ => {}
-    }
+    {}
 }
 
 pub fn make_animated_image(
@@ -105,5 +103,5 @@ pub fn make_animated_image(
         e.add_component(img);
     }
 
-    return e;
+    e
 }

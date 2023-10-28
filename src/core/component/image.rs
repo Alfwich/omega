@@ -10,8 +10,6 @@ extern crate nalgebra_glm as glm;
 
 use core::any::Any;
 
-
-
 #[derive(Debug, Clone)]
 pub struct ImageRenderRect {
     pub x: f32,
@@ -65,7 +63,7 @@ impl Image {
     pub fn with_texture(name: &str, texture: &Texture, width: f32, height: f32) -> Self {
         Image {
             name: name.to_string(),
-            texture: Some(texture.clone()),
+            texture: Some(*texture),
             width,
             height,
             scale: 1.,
@@ -96,10 +94,10 @@ impl Component for Image {
     fn render(&self, renderer: &Renderer) {
         if let Some(texture) = self.texture {
             let mvp = renderer.make_mvp(
-                self.x as f32,
-                self.y as f32,
-                self.width as f32,
-                self.height as f32,
+                self.x,
+                self.y,
+                self.width,
+                self.height,
                 self.rotation,
                 self.scale,
                 self.scale,
@@ -144,7 +142,7 @@ impl Component for Image {
                 };
 
                 BindTexture(TEXTURE_2D, texture.texture_id);
-                DrawElements(TRIANGLES, 6, UNSIGNED_INT, 0 as *const c_void);
+                DrawElements(TRIANGLES, 6, UNSIGNED_INT, std::ptr::null::<c_void>());
             }
         }
     }

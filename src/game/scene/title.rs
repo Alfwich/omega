@@ -23,7 +23,7 @@ struct Data {
 
 impl Component for Data {
     fn get_name(&self) -> &str {
-        return "data";
+        "data"
     }
 
     fn render(&self, _renderer: &Renderer) {}
@@ -43,7 +43,7 @@ fn update_title(e: &mut Entity, _app: &App, dt: f32) {
     {
         let data = e.find_component::<Data>("data").unwrap();
         data.counter += dt;
-        d = data.clone();
+        d = *data;
     }
 
     {
@@ -219,7 +219,7 @@ pub fn make_title(app: &mut App, viewport: &Viewport) -> Entity {
 
     {
         let audio_data = app.resource.load_audio_data("res/snd/beep.wav").unwrap();
-        let beep = AudioClip::new("beep", &audio_data);
+        let beep = AudioClip::new("beep", audio_data);
         e.add_component(beep);
     }
 
@@ -252,5 +252,5 @@ pub fn make_title(app: &mut App, viewport: &Viewport) -> Entity {
         e.add_child(animated_image);
     }
 
-    return e;
+    e
 }

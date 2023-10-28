@@ -41,23 +41,12 @@ pub struct Texture {
     pub height: u32,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 struct TextTextureData {
     pub rows: HashMap<i32, Vec<u8>>,
     pub width: usize,
     pub height: usize,
     pub data: Vec<u8>,
-}
-
-impl Default for TextTextureData {
-    fn default() -> Self {
-        TextTextureData {
-            rows: HashMap::new(),
-            width: 0,
-            height: 0,
-            data: Vec::new(),
-        }
-    }
 }
 
 pub fn load_image_from_disk(path: &str) -> Result<Texture, String> {
@@ -122,7 +111,7 @@ pub fn load_image_from_disk(path: &str) -> Result<Texture, String> {
             }
         }
 
-        return Err("Failed to load disk image".to_string());
+        Err("Failed to load disk image".to_string())
     }
 }
 
@@ -189,12 +178,10 @@ pub fn load_image_from_url(
                     }
                 }
 
-                return Err("Bad Image".to_string());
+                Err("Bad Image".to_string())
             }
         }
-        Err(_) => {
-            return Err("Bad Image Url".to_string());
-        }
+        Err(_) => Err("Bad Image Url".to_string()),
     }
 }
 
@@ -205,14 +192,12 @@ fn sw_blit_to_buffer(
     dst: &mut TextTextureData,
     src: &[u8],
 ) {
-    let y_offset = (-top + offset.1) as i32;
+    let y_offset = -top + offset.1;
     for x in 0..size.0 {
         let x_pos = (x + offset.0 as u32) as usize;
         for y in 0..size.1 {
-            let y_dst_pos = (y as i32 + y_offset) as i32;
-            if !dst.rows.contains_key(&y_dst_pos) {
-                dst.rows.insert(y_dst_pos, Vec::new());
-            }
+            let y_dst_pos = y as i32 + y_offset;
+            dst.rows.entry(y_dst_pos).or_insert_with(Vec::new);
 
             while dst.rows[&y_dst_pos].len() <= x_pos {
                 dst.rows.get_mut(&y_dst_pos).unwrap().push(0);
@@ -473,7 +458,14 @@ fn upload_buffer_data(vao: u32, vbo: u32, ebo: u32) {
             vertex_data.as_ptr() as *const c_void,
             STATIC_DRAW,
         );
-        VertexAttribPointer(0, 3, FLOAT, FALSE, size_of_vertex, 0 as *const c_void);
+        VertexAttribPointer(
+            0,
+            3,
+            FLOAT,
+            FALSE,
+            size_of_vertex,
+            std::ptr::null::<c_void>(),
+        );
         EnableVertexAttribArray(0);
         VertexAttribPointer(
             1,

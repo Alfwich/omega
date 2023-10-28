@@ -50,7 +50,7 @@ impl Renderer {
             result.0 += offset.0;
             result.1 += offset.1;
         }
-        return result;
+        result
     }
 
     pub fn make_mvp(
@@ -71,6 +71,6 @@ impl Renderer {
         let mve = glm::make_vec3(&[x + offset.0, self.viewport.window_size.1 - y - offset.1, 0.]);
         let view = glm::translate(&self.id, &mve);
         let model = rotate_model * scale_model;
-        return self.ortho * view * model;
+        self.ortho * view * model
     }
 }

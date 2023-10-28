@@ -20,7 +20,7 @@ struct Data {
 
 impl Component for Data {
     fn get_name(&self) -> &str {
-        return "data";
+        "data"
     }
 
     fn render(&self, _renderer: &Renderer) {}
@@ -31,7 +31,7 @@ impl Component for Data {
 }
 
 fn update_button(e: &mut Entity, _app: &App, _dt: f32) {
-    let data = e.find_component::<Data>("data").unwrap().clone();
+    let data = *e.find_component::<Data>("data").unwrap();
     let over_button;
     {
         let render_offset_x = e.x;
@@ -114,9 +114,9 @@ pub fn make_button(app: &mut App, _viewport: &Viewport) -> Entity {
 
     {
         let audio_data = app.resource.load_audio_data("res/snd/zombie.wav").unwrap();
-        let zombie = AudioClip::new("zombie", &audio_data);
+        let zombie = AudioClip::new("zombie", audio_data);
         e.add_component(zombie);
     }
 
-    return e;
+    e
 }

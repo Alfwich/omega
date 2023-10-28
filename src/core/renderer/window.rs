@@ -16,7 +16,7 @@ pub fn make_window(config: &WindowConfig) -> Box<Window> {
 
     configure_sfml_window(&mut result, config);
 
-    return Box::new(result);
+    Box::new(result)
 }
 
 #[allow(dead_code)]

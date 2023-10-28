@@ -206,11 +206,11 @@ impl Resources {
 
     pub fn load_text_texture(&mut self, text: &str) -> Result<Texture, String> {
         if let Some(id) = self.text_data.get(&text.to_string()) {
-            return Ok(*id);
+            Ok(*id)
         } else {
             let text_result = render_text_to_texture(text)?;
             self.text_data.insert(text.to_string(), text_result);
-            return Ok(text_result);
+            Ok(text_result)
         }
     }
 }

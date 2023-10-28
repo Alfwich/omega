@@ -63,7 +63,7 @@ impl Component for Text {
                 mvp.data.as_slice().as_ptr(),
             );
             BindTexture(TEXTURE_2D, self.texture_id);
-            DrawElements(TRIANGLES, 6, UNSIGNED_INT, 0 as *const c_void);
+            DrawElements(TRIANGLES, 6, UNSIGNED_INT, std::ptr::null::<c_void>());
         }
     }
 

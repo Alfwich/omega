@@ -10,18 +10,10 @@ use crate::game::state::GameState;
 use crate::util::timer::Timer;
 use sfml::window::{Event as SEvent, Key, Window};
 
+#[derive(Default)]
 pub struct App {
     pub state: GameState,
     pub resource: Resources,
-}
-
-impl Default for App {
-    fn default() -> Self {
-        App {
-            state: GameState::default(),
-            resource: Resources::default(),
-        }
-    }
 }
 
 fn handle_window_events(window: &mut Window, app: &mut App, root: &mut Entity) {
