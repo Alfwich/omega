@@ -32,7 +32,7 @@ impl Default for ImageRenderRect {
 #[derive(Default, Debug)]
 pub struct Image {
     pub name: String,
-    pub scale: f32,
+    pub scale: (f32, f32),
     pub border: f32,
     pub texture: Option<Texture>,
     pub x: f32,
@@ -54,7 +54,7 @@ impl Image {
     pub fn new(name: &str) -> Self {
         Image {
             name: name.to_string(),
-            scale: 1.,
+            scale: (1., 1.),
             color: glm::make_vec3(&[1., 1., 1.]),
             ..Default::default()
         }
@@ -66,7 +66,7 @@ impl Image {
             texture: Some(*texture),
             width,
             height,
-            scale: 1.,
+            scale: (1., 1.),
             color: glm::make_vec3(&[1., 1., 1.]),
             ..Default::default()
         }
@@ -99,8 +99,8 @@ impl Component for Image {
                 self.width,
                 self.height,
                 self.rotation,
-                self.scale,
-                self.scale,
+                self.scale.0,
+                self.scale.1,
             );
 
             unsafe {

@@ -11,6 +11,7 @@ use std::collections::HashMap;
 #[derive(Default, Debug, Clone)]
 struct Data {
     timer: u64,
+    fps_mult: f32,
     frame: usize,
     frames: Vec<ImageRenderRect>,
     frame_range: (usize, usize),
@@ -34,7 +35,7 @@ fn update_animated_image(e: &mut Entity, _app: &App, dt: f32) {
     {
         let d = e.find_component::<Data>("data").unwrap();
         let range = d.frame_range.1 - d.frame_range.0;
-        d.timer += (dt * 1000.) as u64;
+        d.timer += (dt * 1000. * d.fps_mult) as u64;
         let pos = match range {
             0 => 0,
             _ => (d.timer / 1000) as usize % range as usize,
@@ -58,11 +59,19 @@ pub fn animated_image_set_animation(e: &mut Entity, name: &str) {
     let d = e.find_component::<Data>("data").unwrap();
     if d.animations.contains_key(name) {
         d.frame_range = d.animations[name];
+        d.frame = 0;
     }
 }
 pub fn animated_image_add_animation(e: &mut Entity, name: &str, frame_range: (usize, usize)) {
     let d = e.find_component::<Data>("data").unwrap();
     d.animations.insert(name.to_string(), frame_range);
+}
+
+pub fn animated_image_set_scale(e: &mut Entity, scale: (f32, f32)) {
+    {
+        let img = e.find_component::<Image>("ai-texture").unwrap();
+        img.scale = scale;
+    }
 }
 
 pub fn make_animated_image(
@@ -73,7 +82,8 @@ pub fn make_animated_image(
     // Width/Height of the cell
     width: f32,
     height: f32,
-    scale: Option<f32>,
+    scale: Option<(f32, f32)>,
+    fps: Option<f32>,
 ) -> Entity {
     let mut e = Entity::new(
         name,
@@ -106,6 +116,11 @@ pub fn make_animated_image(
         }
 
         d.frame_range = (0, d.frames.len());
+
+        if let Some(f) = fps {
+            d.fps_mult = f;
+        }
+
         e.add_component(d);
     }
 
@@ -117,9 +132,11 @@ pub fn make_animated_image(
             w: width,
             h: height,
         });
+
         if let Some(s) = scale {
             img.scale = s;
         }
+
         e.add_component(img);
     }
 

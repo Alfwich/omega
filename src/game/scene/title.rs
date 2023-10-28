@@ -4,7 +4,8 @@ use crate::core::component::component::Component;
 use crate::core::component::image::{Image, ImageRenderRect};
 use crate::core::component::text::Text;
 use crate::core::entity::animated_image::{
-    self, animated_image_add_animation, animated_image_set_animation, make_animated_image,
+    animated_image_add_animation, animated_image_set_animation, animated_image_set_scale,
+    make_animated_image,
 };
 use crate::core::entity::entity::{Entity, EntityFns};
 use crate::core::event::Event;
@@ -114,25 +115,32 @@ fn handle_event(e: &mut Entity, app: &mut App, ev: &Event) {
             SFMLEvent::KeyPressed { code, .. } => match code {
                 &Key::W => {
                     card.y -= 10.;
+                }
+                &Key::A => {
+                    card.x -= 10.;
 
                     {
                         let animated_image = e.find_child_by_name("test-animated").unwrap();
                         animated_image_set_animation(animated_image, "walking");
+                        animated_image_set_scale(animated_image, (-3., 3.));
                     }
-                }
-                &Key::A => {
-                    card.x -= 10.;
                 }
                 &Key::S => {
                     card.y += 10.;
 
                     {
                         let animated_image = e.find_child_by_name("test-animated").unwrap();
-                        animated_image_set_animation(animated_image, "idle");
+                        animated_image_set_animation(animated_image, "swim");
                     }
                 }
                 &Key::D => {
                     card.x += 10.;
+
+                    {
+                        let animated_image = e.find_child_by_name("test-animated").unwrap();
+                        animated_image_set_animation(animated_image, "walking");
+                        animated_image_set_scale(animated_image, (3., 3.));
+                    }
                 }
                 &Key::U => {
                     let info = app.resource.load_image_from_disk(DISK_IMAGE_PATH).unwrap();
@@ -147,6 +155,17 @@ fn handle_event(e: &mut Entity, app: &mut App, ev: &Event) {
                     dynamic_cmp.color.y = thread_rng.gen_range(0f32..1f32);
                     dynamic_cmp.color.z = thread_rng.gen_range(0f32..1f32);
                     e.add_component(dynamic_cmp);
+                }
+                _ => {}
+            },
+            SFMLEvent::KeyReleased { code, .. } => match code {
+                &Key::A => {
+                    let animated_image = e.find_child_by_name("test-animated").unwrap();
+                    animated_image_set_animation(animated_image, "idle");
+                }
+                &Key::D => {
+                    let animated_image = e.find_child_by_name("test-animated").unwrap();
+                    animated_image_set_animation(animated_image, "idle");
                 }
                 _ => {}
             },
@@ -257,12 +276,20 @@ pub fn make_title(app: &mut App, viewport: &Viewport) -> Entity {
     }
 
     {
-        let mut animated_image =
-            make_animated_image(app, "test-animated", DISK_IMAGE_MARIO, 35., 50., Some(6.));
+        let mut animated_image = make_animated_image(
+            app,
+            "test-animated",
+            DISK_IMAGE_MARIO,
+            35.,
+            50.,
+            Some((3., 3.)),
+            Some(10.),
+        );
         animated_image.x = 500.;
         animated_image.y = 500.;
         animated_image_add_animation(&mut animated_image, "idle", (0, 0));
-        animated_image_add_animation(&mut animated_image, "walking", (1, 3));
+        animated_image_add_animation(&mut animated_image, "walking", (1, 4));
+        animated_image_add_animation(&mut animated_image, "swim", (26, 31));
         animated_image_set_animation(&mut animated_image, "idle");
 
         e.add_child(animated_image);
