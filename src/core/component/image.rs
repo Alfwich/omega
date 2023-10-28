@@ -10,7 +10,7 @@ extern crate nalgebra_glm as glm;
 
 use core::any::Any;
 
-use super::text;
+
 
 #[derive(Debug, Clone)]
 pub struct ImageRenderRect {
