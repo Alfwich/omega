@@ -3,7 +3,9 @@ use crate::core::component::audio_clip::AudioClip;
 use crate::core::component::component::Component;
 use crate::core::component::image::{Image, ImageRenderRect};
 use crate::core::component::text::Text;
-use crate::core::entity::animated_image::make_animated_image;
+use crate::core::entity::animated_image::{
+    self, animated_image_add_animation, animated_image_set_animation, make_animated_image,
+};
 use crate::core::entity::entity::{Entity, EntityFns};
 use crate::core::event::Event;
 use crate::core::renderer::renderer::Renderer;
@@ -112,12 +114,22 @@ fn handle_event(e: &mut Entity, app: &mut App, ev: &Event) {
             SFMLEvent::KeyPressed { code, .. } => match code {
                 &Key::W => {
                     card.y -= 10.;
+
+                    {
+                        let animated_image = e.find_child_by_name("test-animated").unwrap();
+                        animated_image_set_animation(animated_image, "walking");
+                    }
                 }
                 &Key::A => {
                     card.x -= 10.;
                 }
                 &Key::S => {
                     card.y += 10.;
+
+                    {
+                        let animated_image = e.find_child_by_name("test-animated").unwrap();
+                        animated_image_set_animation(animated_image, "idle");
+                    }
                 }
                 &Key::D => {
                     card.x += 10.;
@@ -249,6 +261,10 @@ pub fn make_title(app: &mut App, viewport: &Viewport) -> Entity {
             make_animated_image(app, "test-animated", DISK_IMAGE_MARIO, 35., 50., Some(6.));
         animated_image.x = 500.;
         animated_image.y = 500.;
+        animated_image_add_animation(&mut animated_image, "idle", (0, 0));
+        animated_image_add_animation(&mut animated_image, "walking", (1, 3));
+        animated_image_set_animation(&mut animated_image, "idle");
+
         e.add_child(animated_image);
     }
 

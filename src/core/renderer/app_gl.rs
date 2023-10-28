@@ -197,7 +197,7 @@ fn sw_blit_to_buffer(
         let x_pos = (x + offset.0 as u32) as usize;
         for y in 0..size.1 {
             let y_dst_pos = y as i32 + y_offset;
-            dst.rows.entry(y_dst_pos).or_insert_with(Vec::new);
+            dst.rows.entry(y_dst_pos).or_default();
 
             while dst.rows[&y_dst_pos].len() <= x_pos {
                 dst.rows.get_mut(&y_dst_pos).unwrap().push(0);

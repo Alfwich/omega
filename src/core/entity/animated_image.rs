@@ -6,12 +6,15 @@ use crate::core::event::Event;
 use crate::core::renderer::renderer::Renderer;
 
 use core::any::Any;
+use std::collections::HashMap;
 
 #[derive(Default, Debug, Clone)]
 struct Data {
-    timer: f32,
+    timer: u64,
     frame: usize,
     frames: Vec<ImageRenderRect>,
+    frame_range: (usize, usize),
+    animations: HashMap<String, (usize, usize)>,
 }
 
 impl Component for Data {
@@ -30,8 +33,13 @@ fn update_animated_image(e: &mut Entity, _app: &App, dt: f32) {
     let data;
     {
         let d = e.find_component::<Data>("data").unwrap();
-        d.timer += dt * 10.;
-        d.frame = d.timer as usize % d.frames.len();
+        let range = d.frame_range.1 - d.frame_range.0;
+        d.timer += (dt * 1000.) as u64;
+        let pos = match range {
+            0 => 0,
+            _ => (d.timer / 1000) as usize % range as usize,
+        };
+        d.frame = d.frame_range.0 as usize + pos;
         data = d.clone();
     }
 
@@ -44,6 +52,17 @@ fn update_animated_image(e: &mut Entity, _app: &App, dt: f32) {
 fn handle_event(e: &mut Entity, _app: &mut App, _ev: &Event) {
     let _data = e.find_component::<Data>("data").unwrap();
     {}
+}
+
+pub fn animated_image_set_animation(e: &mut Entity, name: &str) {
+    let d = e.find_component::<Data>("data").unwrap();
+    if d.animations.contains_key(name) {
+        d.frame_range = d.animations[name];
+    }
+}
+pub fn animated_image_add_animation(e: &mut Entity, name: &str, frame_range: (usize, usize)) {
+    let d = e.find_component::<Data>("data").unwrap();
+    d.animations.insert(name.to_string(), frame_range);
 }
 
 pub fn make_animated_image(
@@ -86,6 +105,7 @@ pub fn make_animated_image(
             y_pos += height as u32;
         }
 
+        d.frame_range = (0, d.frames.len());
         e.add_component(d);
     }
 
