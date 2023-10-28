@@ -1,6 +1,5 @@
 use crate::app::App;
 use crate::core::component::component::Component;
-use crate::core::component::render_offset::RenderOffset;
 use crate::core::event::Event;
 use crate::core::renderer::renderer::Renderer;
 
@@ -21,7 +20,8 @@ impl Default for EntityFns {
 #[derive(Default)]
 pub struct Entity {
     pub name: String,
-    pub render_offset: RenderOffset,
+    pub x: f32,
+    pub y: f32,
     components: Vec<Box<dyn Component>>,
     children: Vec<Entity>,
     vtable: EntityFns,
@@ -31,7 +31,8 @@ impl Entity {
     pub fn new(name: &str, vtable: EntityFns) -> Self {
         Entity {
             name: name.to_string(),
-            render_offset: RenderOffset::default(),
+            x: 0.,
+            y: 0.,
             components: Vec::default(),
             children: Vec::default(),
             vtable,
@@ -94,7 +95,7 @@ impl Entity {
     }
 
     pub fn render_components(&self, renderer: &mut Renderer) {
-        renderer.push_offset(self.render_offset);
+        renderer.push_offset((self.x, self.y));
         for cmp in &self.components {
             cmp.render(renderer);
         }

@@ -30,7 +30,7 @@ fn update_animated_image(e: &mut Entity, _app: &App, dt: f32) {
     let data;
     {
         let d = e.find_component::<Data>("data").unwrap();
-        d.timer += dt * 2.;
+        d.timer += dt * 10.;
         d.frame = d.timer as usize % d.frames.len();
         data = d.clone();
     }
@@ -56,6 +56,7 @@ pub fn make_animated_image(
     // Width/Height of the cell
     width: f32,
     height: f32,
+    scale: Option<f32>,
 ) -> Entity {
     let mut e = Entity::new(
         name,
@@ -73,8 +74,8 @@ pub fn make_animated_image(
 
     {
         let mut d = Data::default();
-        while y_pos < texture_info.height {
-            while x_pos < texture_info.width {
+        while (y_pos + height as u32) < texture_info.height {
+            while (x_pos + width as u32) < texture_info.width {
                 d.frames.push(ImageRenderRect {
                     x: x_pos as f32,
                     y: y_pos as f32,
@@ -98,6 +99,9 @@ pub fn make_animated_image(
             w: width,
             h: height,
         });
+        if let Some(s) = scale {
+            img.scale = s;
+        }
         e.add_component(img);
     }
 

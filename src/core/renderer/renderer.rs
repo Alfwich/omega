@@ -1,6 +1,6 @@
 extern crate nalgebra_glm as glm;
 
-use crate::core::{component::render_offset::RenderOffset, renderer::app_gl::AppGL};
+use crate::core::renderer::app_gl::AppGL;
 
 #[derive(Debug)]
 pub struct Viewport {
@@ -18,7 +18,7 @@ impl Viewport {
 }
 
 pub struct Renderer {
-    view_stack: Vec<RenderOffset>,
+    view_stack: Vec<(f32, f32)>,
     pub gl: AppGL,
     pub id: glm::TMat4<f32>,
     pub ortho: glm::TMat4<f32>,
@@ -36,7 +36,7 @@ impl Renderer {
         }
     }
 
-    pub fn push_offset(&mut self, offset: RenderOffset) {
+    pub fn push_offset(&mut self, offset: (f32, f32)) {
         self.view_stack.push(offset);
     }
 
@@ -47,8 +47,8 @@ impl Renderer {
     pub fn get_offset(&self) -> (f32, f32) {
         let mut result = (0., 0.);
         for offset in self.view_stack.iter() {
-            result.0 += offset.x;
-            result.1 += offset.y;
+            result.0 += offset.0;
+            result.1 += offset.1;
         }
         return result;
     }

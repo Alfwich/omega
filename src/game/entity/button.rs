@@ -34,8 +34,8 @@ fn update_button(e: &mut Entity, _app: &App, _dt: f32) {
     let data = e.find_component::<Data>("data").unwrap().clone();
     let over_button;
     {
-        let render_offset_x = e.render_offset.x as f32;
-        let render_offset_y = e.render_offset.y as f32;
+        let render_offset_x = e.x;
+        let render_offset_y = e.y;
         let button = e.find_component::<Image>("background").unwrap();
         let bx = render_offset_x + button.x;
         let by = render_offset_y + button.y;

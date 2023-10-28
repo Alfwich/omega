@@ -64,8 +64,8 @@ fn update_title(e: &mut Entity, _app: &App, dt: f32) {
     }
     {
         let button = e.find_child_by_name("test_button").unwrap();
-        button.render_offset.x = d.counter.cos() * 50. * PI * 2. + 300.;
-        button.render_offset.y = d.counter.sin() * 50. * PI * 2. + 300.;
+        button.x = d.counter.cos() * 50. * PI * 2. + 300.;
+        button.y = d.counter.sin() * 50. * PI * 2. + 300.;
     }
     {
         let test_quad = e.find_component::<Image>("test-quad").unwrap();
@@ -246,9 +246,9 @@ pub fn make_title(app: &mut App, viewport: &Viewport) -> Entity {
 
     {
         let mut animated_image =
-            make_animated_image(app, "test-animated", DISK_IMAGE_MARIO, 35., 27.);
-        animated_image.render_offset.x = 500.;
-        animated_image.render_offset.y = 500.;
+            make_animated_image(app, "test-animated", DISK_IMAGE_MARIO, 35., 50., Some(6.));
+        animated_image.x = 500.;
+        animated_image.y = 500.;
         e.add_child(animated_image);
     }
 
