@@ -22,6 +22,8 @@ use std::f32::consts::PI;
 #[derive(Default, Debug, Clone, Copy)]
 struct Data {
     counter: f32,
+    left_down: bool,
+    right_down: bool,
 }
 
 impl Component for Data {
@@ -102,6 +104,18 @@ fn update_title(e: &mut Entity, _app: &App, dt: f32) {
         };
         test_quad.r_rect = Some(new_rect);
     }
+    {
+        let animated_image = e.find_child_by_name("test-animated").unwrap();
+        match (d.left_down, d.right_down) {
+            (true, false) => {
+                animated_image.x -= 100. * dt;
+            }
+            (false, true) => {
+                animated_image.x += 100. * dt;
+            }
+            _ => {}
+        }
+    }
 }
 
 fn handle_event(e: &mut Entity, app: &mut App, ev: &Event) {
@@ -124,6 +138,10 @@ fn handle_event(e: &mut Entity, app: &mut App, ev: &Event) {
                         animated_image_set_animation(animated_image, "walking");
                         animated_image_set_scale(animated_image, (-3., 3.));
                     }
+                    {
+                        let data = e.find_component::<Data>("data").unwrap();
+                        data.left_down = true;
+                    }
                 }
                 &Key::S => {
                     card.y += 10.;
@@ -140,6 +158,10 @@ fn handle_event(e: &mut Entity, app: &mut App, ev: &Event) {
                         let animated_image = e.find_child_by_name("test-animated").unwrap();
                         animated_image_set_animation(animated_image, "walking");
                         animated_image_set_scale(animated_image, (3., 3.));
+                    }
+                    {
+                        let data = e.find_component::<Data>("data").unwrap();
+                        data.right_down = true;
                     }
                 }
                 &Key::U => {
@@ -160,12 +182,26 @@ fn handle_event(e: &mut Entity, app: &mut App, ev: &Event) {
             },
             SFMLEvent::KeyReleased { code, .. } => match code {
                 &Key::A => {
-                    let animated_image = e.find_child_by_name("test-animated").unwrap();
-                    animated_image_set_animation(animated_image, "idle");
+                    {
+                        let animated_image = e.find_child_by_name("test-animated").unwrap();
+                        animated_image_set_animation(animated_image, "idle");
+                    }
+
+                    {
+                        let data = e.find_component::<Data>("data").unwrap();
+                        data.left_down = false;
+                    }
                 }
                 &Key::D => {
-                    let animated_image = e.find_child_by_name("test-animated").unwrap();
-                    animated_image_set_animation(animated_image, "idle");
+                    {
+                        let animated_image = e.find_child_by_name("test-animated").unwrap();
+                        animated_image_set_animation(animated_image, "idle");
+                    }
+
+                    {
+                        let data = e.find_component::<Data>("data").unwrap();
+                        data.right_down = false;
+                    }
                 }
                 _ => {}
             },
