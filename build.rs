@@ -15,7 +15,7 @@ fn get_output_path() -> PathBuf {
 
 fn main() {
     let output_path = get_output_path();
-    let paths = read_dir("extern/SFML-2.5.1").unwrap();
+    let paths = read_dir("extern/SFML-2.5.1/bin").unwrap();
     for p in paths {
         if p.as_ref()
             .unwrap()
