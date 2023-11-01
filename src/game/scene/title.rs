@@ -119,20 +119,16 @@ fn update_title(e: &mut Entity, _app: &App, dt: f32) {
 }
 
 fn handle_event(e: &mut Entity, app: &mut App, ev: &Event) {
-    let card = e.find_component::<Image>("card").unwrap();
     match ev {
         Event::SFMLEvent(ev) => match ev {
             SFMLEvent::MouseMoved { x, y } => {
+                let card = e.find_component::<Image>("card").unwrap();
                 card.x = *x as f32;
                 card.y = *y as f32;
             }
             SFMLEvent::KeyPressed { code, .. } => match code {
-                &Key::W => {
-                    card.y -= 10.;
-                }
+                &Key::W => {}
                 &Key::A => {
-                    card.x -= 10.;
-
                     {
                         let animated_image = e.find_child_by_name("test-animated").unwrap();
                         animated_image_set_animation(animated_image, "walking");
@@ -144,16 +140,10 @@ fn handle_event(e: &mut Entity, app: &mut App, ev: &Event) {
                     }
                 }
                 &Key::S => {
-                    card.y += 10.;
-
-                    {
-                        let animated_image = e.find_child_by_name("test-animated").unwrap();
-                        animated_image_set_animation(animated_image, "swim");
-                    }
+                    let animated_image = e.find_child_by_name("test-animated").unwrap();
+                    animated_image_set_animation(animated_image, "swim");
                 }
                 &Key::D => {
-                    card.x += 10.;
-
                     {
                         let animated_image = e.find_child_by_name("test-animated").unwrap();
                         animated_image_set_animation(animated_image, "walking");
@@ -209,7 +199,10 @@ fn handle_event(e: &mut Entity, app: &mut App, ev: &Event) {
         },
         Event::ImageLoadEvent(img_data) => {
             if img_data.url == REMOTE_IMAGE_URL {
-                card.apply_image(img_data);
+                {
+                    let card = e.find_component::<Image>("card").unwrap();
+                    card.apply_image(img_data);
+                }
             } else if img_data.url == DISK_IMAGE_PATH {
                 let async_local = e.find_component::<Image>("async_local").unwrap();
                 async_local.apply_image(img_data)
@@ -308,6 +301,7 @@ pub fn make_title(app: &mut App, viewport: &Viewport) -> Entity {
             w: 256.,
             h: 256.,
         });
+        image.render_type = Some(crate::core::component::image::ImageRenderType::Linear);
         e.add_component(image);
     }
 
@@ -320,6 +314,7 @@ pub fn make_title(app: &mut App, viewport: &Viewport) -> Entity {
             50.,
             Some((3., 3.)),
             Some(10.),
+            Some(crate::core::component::image::ImageRenderType::Nearest),
         );
         animated_image.x = 500.;
         animated_image.y = 500.;

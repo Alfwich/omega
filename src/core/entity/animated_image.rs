@@ -1,6 +1,6 @@
 use crate::app::App;
 use crate::core::component::component::Component;
-use crate::core::component::image::{Image, ImageRenderRect};
+use crate::core::component::image::{Image, ImageRenderRect, ImageRenderType};
 use crate::core::entity::entity::{Entity, EntityFns};
 use crate::core::event::Event;
 use crate::core::renderer::renderer::Renderer;
@@ -84,6 +84,7 @@ pub fn make_animated_image(
     height: f32,
     scale: Option<(f32, f32)>,
     fps: Option<f32>,
+    image_render_type: Option<ImageRenderType>,
 ) -> Entity {
     let mut e = Entity::new(
         name,
@@ -135,6 +136,10 @@ pub fn make_animated_image(
 
         if let Some(s) = scale {
             img.scale = s;
+        }
+
+        if let Some(_) = image_render_type {
+            img.render_type = image_render_type;
         }
 
         e.add_component(img);

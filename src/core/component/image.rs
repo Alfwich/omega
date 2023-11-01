@@ -10,6 +10,12 @@ extern crate nalgebra_glm as glm;
 
 use core::any::Any;
 
+#[derive(Debug)]
+pub enum ImageRenderType {
+    Nearest,
+    Linear,
+}
+
 #[derive(Debug, Clone)]
 pub struct ImageRenderRect {
     pub x: f32,
@@ -44,6 +50,8 @@ pub struct Image {
 
     // Optional Section of the image to render in screen space
     pub r_rect: Option<ImageRenderRect>,
+
+    pub render_type: Option<ImageRenderType>,
 }
 
 impl Image {
@@ -142,6 +150,23 @@ impl Component for Image {
                 };
 
                 BindTexture(TEXTURE_2D, texture.texture_id);
+
+                if let Some(t) = &self.render_type {
+                    let min_max: (i32, i32) = match t {
+                        ImageRenderType::Linear => (
+                            NEAREST_MIPMAP_NEAREST.try_into().unwrap(),
+                            NEAREST.try_into().unwrap(),
+                        ),
+
+                        _ => (
+                            NEAREST_MIPMAP_NEAREST.try_into().unwrap(),
+                            NEAREST.try_into().unwrap(),
+                        ),
+                    };
+                    TexParameteri(TEXTURE_2D, TEXTURE_MIN_FILTER, min_max.0);
+                    TexParameteri(TEXTURE_2D, TEXTURE_MAG_FILTER, min_max.1);
+                }
+
                 DrawElements(TRIANGLES, 6, UNSIGNED_INT, std::ptr::null::<c_void>());
             }
         }

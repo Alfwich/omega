@@ -69,12 +69,7 @@ pub fn load_image_from_disk(path: &str) -> Result<Texture, String> {
                 TEXTURE_WRAP_T,
                 CLAMP_TO_EDGE.try_into().unwrap(),
             );
-            TexParameteri(
-                TEXTURE_2D,
-                TEXTURE_MIN_FILTER,
-                NEAREST_MIPMAP_NEAREST.try_into().unwrap(),
-            );
-            TexParameteri(TEXTURE_2D, TEXTURE_MAG_FILTER, NEAREST.try_into().unwrap());
+
             let img_data = Image::from_memory(&img_bytes);
             match img_data {
                 Some(img_data) => {
