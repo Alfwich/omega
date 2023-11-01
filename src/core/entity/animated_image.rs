@@ -38,9 +38,9 @@ fn update_animated_image(e: &mut Entity, _app: &App, dt: f32) {
         d.timer += (dt * 1000. * d.fps_mult) as u64;
         let pos = match range {
             0 => 0,
-            _ => (d.timer / 1000) as usize % range as usize,
+            _ => (d.timer / 1000) as usize % range,
         };
-        d.frame = d.frame_range.0 as usize + pos;
+        d.frame = d.frame_range.0 + pos;
         data = d.clone();
     }
 
@@ -138,7 +138,7 @@ pub fn make_animated_image(
             img.scale = s;
         }
 
-        if let Some(_) = image_render_type {
+        if image_render_type.is_some() {
             img.render_type = image_render_type;
         }
 

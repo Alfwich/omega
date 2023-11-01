@@ -10,7 +10,7 @@ fn get_output_path() -> PathBuf {
     let path = Path::new(&manifest_dir_string)
         .join("target")
         .join(build_type);
-    return PathBuf::from(path);
+    path
 }
 
 fn main() {
