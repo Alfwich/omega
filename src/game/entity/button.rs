@@ -34,8 +34,8 @@ fn update_button(e: &mut Entity, _app: &App, _dt: f32) {
     let data = *e.find_component::<Data>("data").unwrap();
     let over_button;
     {
-        let render_offset_x = e.x;
-        let render_offset_y = e.y;
+        let render_offset_x = 0.;
+        let render_offset_y = 0.;
         let button = e.find_component::<Image>("background").unwrap();
         let bx = render_offset_x + button.x;
         let by = render_offset_y + button.y;
@@ -66,7 +66,7 @@ fn update_button(e: &mut Entity, _app: &App, _dt: f32) {
     }
 }
 
-fn handle_event(e: &mut Entity, _app: &mut App, ev: &Event) {
+fn handle_event(e: &mut Entity, _app: &mut Option<&mut App>, ev: &Event) {
     let data = e.find_component::<Data>("data").unwrap();
     match ev {
         Event::SFMLEvent(sev) => match sev {
@@ -88,6 +88,17 @@ fn handle_event(e: &mut Entity, _app: &mut App, ev: &Event) {
             },
             _ => {}
         },
+        Event::UpdateRenderable(p) => {
+            let button = e.find_component::<Image>("background").unwrap();
+
+            if let Some(x) = p.x {
+                button.x = x;
+            }
+
+            if let Some(y) = p.y {
+                button.y = y;
+            }
+        }
         _ => {}
     }
 }

@@ -51,9 +51,21 @@ fn update_animated_image(e: &mut Entity, _app: &App, dt: f32) {
     }
 }
 
-fn handle_event(e: &mut Entity, _app: &mut App, _ev: &Event) {
-    let _data = e.find_component::<Data>("data").unwrap();
-    {}
+fn handle_event(e: &mut Entity, _app: &mut Option<&mut App>, ev: &Event) {
+    match ev {
+        Event::UpdateRenderable(p) => {
+            let img = e.find_component::<Image>("ai-texture").unwrap();
+
+            if let Some(x) = p.x {
+                img.x = x;
+            }
+
+            if let Some(y) = p.y {
+                img.y = y;
+            }
+        }
+        _ => {}
+    }
 }
 
 pub fn animated_image_set_animation(e: &mut Entity, name: &str) {

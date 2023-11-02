@@ -31,7 +31,7 @@ fn handle_window_events(window: &mut Window, app: &mut App, root: &mut Entity) {
             _ => {}
         }
 
-        root.handle_event(app, &SFMLEvent(event));
+        root.handle_event(&mut Some(app), &SFMLEvent(event));
     }
 
     let mut image_load_events = Vec::new();
@@ -50,7 +50,7 @@ fn handle_window_events(window: &mut Window, app: &mut App, root: &mut Entity) {
     }
 
     for e in image_load_events.iter() {
-        root.handle_event(app, e)
+        root.handle_event(&mut Some(app), e)
     }
 }
 

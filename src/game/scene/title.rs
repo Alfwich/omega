@@ -70,8 +70,8 @@ fn update_title(e: &mut Entity, _app: &App, dt: f32) {
     }
     {
         let button = e.find_child_by_name("test_button").unwrap();
-        button.x = d.counter.cos() * 50. * PI * 2. + 300.;
-        button.y = d.counter.sin() * 50. * PI * 2. + 300.;
+        button.set_x(d.counter.cos() * 50. * PI * 2. + 300.);
+        button.set_y(d.counter.sin() * 50. * PI * 2. + 300.);
     }
     {
         let test_quad = e.find_component::<Image>("test-quad").unwrap();
@@ -106,20 +106,24 @@ fn update_title(e: &mut Entity, _app: &App, dt: f32) {
         test_quad.r_rect = Some(new_rect);
     }
     {
+        // HACK: Move this to a game entity since we should not be accessing the 'ai-texture'
         let animated_image = e.find_child_by_name("test-animated").unwrap();
+        let img = animated_image
+            .find_component::<Image>("ai-texture")
+            .unwrap();
         match (d.left_down, d.right_down) {
             (true, false) => {
-                animated_image.x -= 100. * dt;
+                img.x -= 100. * dt;
             }
             (false, true) => {
-                animated_image.x += 100. * dt;
+                img.x += 100. * dt;
             }
             _ => {}
         }
     }
 }
 
-fn handle_event(e: &mut Entity, app: &mut App, ev: &Event) {
+fn handle_event(e: &mut Entity, app: &mut Option<&mut App>, ev: &Event) {
     match ev {
         Event::SFMLEvent(ev) => match ev {
             SFMLEvent::MouseMoved { x, y } => {
@@ -156,18 +160,20 @@ fn handle_event(e: &mut Entity, app: &mut App, ev: &Event) {
                     }
                 }
                 &Key::U => {
-                    let info = app.resource.load_image_from_disk(DISK_IMAGE_PATH).unwrap();
-                    let mut dynamic_cmp = Image::new_nameless();
-                    let mut thread_rng = rand::thread_rng();
-                    dynamic_cmp.texture = Some(info);
-                    dynamic_cmp.x = thread_rng.gen_range(0f32..1000f32);
-                    dynamic_cmp.y = thread_rng.gen_range(0f32..1000f32);
-                    dynamic_cmp.width = info.width as f32;
-                    dynamic_cmp.height = info.height as f32;
-                    dynamic_cmp.color.x = thread_rng.gen_range(0f32..1f32);
-                    dynamic_cmp.color.y = thread_rng.gen_range(0f32..1f32);
-                    dynamic_cmp.color.z = thread_rng.gen_range(0f32..1f32);
-                    e.add_component(dynamic_cmp);
+                    if let Some(a) = app {
+                        let info = a.resource.load_image_from_disk(DISK_IMAGE_PATH).unwrap();
+                        let mut dynamic_cmp = Image::new_nameless();
+                        let mut thread_rng = rand::thread_rng();
+                        dynamic_cmp.texture = Some(info);
+                        dynamic_cmp.x = thread_rng.gen_range(0f32..1000f32);
+                        dynamic_cmp.y = thread_rng.gen_range(0f32..1000f32);
+                        dynamic_cmp.width = info.width as f32;
+                        dynamic_cmp.height = info.height as f32;
+                        dynamic_cmp.color.x = thread_rng.gen_range(0f32..1f32);
+                        dynamic_cmp.color.y = thread_rng.gen_range(0f32..1f32);
+                        dynamic_cmp.color.z = thread_rng.gen_range(0f32..1f32);
+                        e.add_component(dynamic_cmp);
+                    }
                 }
                 _ => {}
             },
@@ -212,6 +218,7 @@ fn handle_event(e: &mut Entity, app: &mut App, ev: &Event) {
                 quad_cmp.apply_image(img_data)
             }
         }
+        _ => {}
     }
 }
 
@@ -317,8 +324,8 @@ pub fn make_title(app: &mut App, viewport: &Viewport) -> Entity {
             Some(10.),
             Some(crate::core::component::image::ImageRenderType::Nearest),
         );
-        animated_image.x = 500.;
-        animated_image.y = 500.;
+        animated_image.set_x(500.);
+        animated_image.set_y(500.);
         animated_image_add_animation(&mut animated_image, "idle", (0, 0));
         animated_image_add_animation(&mut animated_image, "walking", (1, 4));
         animated_image_add_animation(&mut animated_image, "swim", (26, 31));

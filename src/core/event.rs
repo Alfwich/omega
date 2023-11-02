@@ -8,7 +8,18 @@ pub struct ImageLoadEventPayload {
     pub height: u32,
 }
 
+pub struct UpdateRenderablePayload {
+    pub x: Option<f32>,
+    pub y: Option<f32>,
+    pub w: Option<f32>,
+    pub h: Option<f32>,
+    pub r: Option<f32>,
+    pub scale_x: Option<f32>,
+    pub scale_y: Option<f32>,
+}
+
 pub enum Event {
     SFMLEvent(SFMLEvent),
     ImageLoadEvent(ImageLoadEventPayload),
+    UpdateRenderable(UpdateRenderablePayload),
 }
