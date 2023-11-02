@@ -1,3 +1,4 @@
+use crate::util::rect::Rect;
 use sfml::window::Event as SFMLEvent;
 
 pub struct ImageLoadEventPayload {

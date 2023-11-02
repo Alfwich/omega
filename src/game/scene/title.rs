@@ -1,7 +1,7 @@
 use crate::app::App;
 use crate::core::component::audio_clip::AudioClip;
 use crate::core::component::component::Component;
-use crate::core::component::image::{Image, ImageRenderRect};
+use crate::core::component::image::Image;
 use crate::core::component::text::Text;
 use crate::core::entity::animated_image::{
     animated_image_add_animation, animated_image_set_animation, animated_image_set_scale,
@@ -12,6 +12,7 @@ use crate::core::event::Event;
 use crate::core::renderer::renderer::Renderer;
 use crate::core::renderer::renderer::Viewport;
 use crate::game::entity::button::make_button;
+use crate::util::rect::Rect;
 
 use rand::Rng;
 use sfml::window::{Event as SFMLEvent, Key};
@@ -76,31 +77,31 @@ fn update_title(e: &mut Entity, _app: &App, dt: f32) {
         let test_quad = e.find_component::<Image>("test-quad").unwrap();
         let idx = (d.counter as u32) % 4;
         let new_rect = match idx {
-            0 => ImageRenderRect {
+            0 => Rect {
                 x: 0.,
                 y: 0.,
                 w: 256.,
                 h: 256.,
             },
-            1 => ImageRenderRect {
+            1 => Rect {
                 x: 256.,
                 y: 0.,
                 w: 256.,
                 h: 256.,
             },
-            2 => ImageRenderRect {
+            2 => Rect {
                 x: 0.,
                 y: 256.,
                 w: 256.,
                 h: 256.,
             },
-            3 => ImageRenderRect {
+            3 => Rect {
                 x: 256.,
                 y: 256.,
                 w: 256.,
                 h: 256.,
             },
-            _ => ImageRenderRect::default(),
+            _ => Rect::default(),
         };
         test_quad.r_rect = Some(new_rect);
     }
@@ -295,7 +296,7 @@ pub fn make_title(app: &mut App, viewport: &Viewport) -> Entity {
         let mut image = Image::new("test-quad");
         image.x = viewport.window_size.0 / 2.;
         image.y = viewport.window_size.1 / 2.;
-        image.r_rect = Some(ImageRenderRect {
+        image.r_rect = Some(Rect {
             x: 256.,
             y: 256.,
             w: 256.,

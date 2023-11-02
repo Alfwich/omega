@@ -1,6 +1,7 @@
 use crate::core::component::component::Component;
 use crate::core::renderer::app_gl::Texture;
 use crate::core::renderer::renderer::Renderer;
+use crate::util::rect::Rect;
 
 use core::ffi::c_void;
 
@@ -14,25 +15,6 @@ use core::any::Any;
 pub enum ImageRenderType {
     Nearest,
     Linear,
-}
-
-#[derive(Debug, Clone)]
-pub struct ImageRenderRect {
-    pub x: f32,
-    pub y: f32,
-    pub w: f32,
-    pub h: f32,
-}
-
-impl Default for ImageRenderRect {
-    fn default() -> Self {
-        Self {
-            x: 0.0,
-            y: 0.0,
-            w: 1.0,
-            h: 1.0,
-        }
-    }
 }
 
 #[derive(Default, Debug)]
@@ -49,7 +31,7 @@ pub struct Image {
     pub color: TVec3<f32>,
 
     // Optional Section of the image to render in screen space
-    pub r_rect: Option<ImageRenderRect>,
+    pub r_rect: Option<Rect>,
 
     pub render_type: Option<ImageRenderType>,
 }

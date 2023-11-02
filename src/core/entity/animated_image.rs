@@ -1,9 +1,10 @@
 use crate::app::App;
 use crate::core::component::component::Component;
-use crate::core::component::image::{Image, ImageRenderRect, ImageRenderType};
+use crate::core::component::image::{Image, ImageRenderType};
 use crate::core::entity::entity::{Entity, EntityFns};
 use crate::core::event::Event;
 use crate::core::renderer::renderer::Renderer;
+use crate::util::rect::Rect;
 
 use core::any::Any;
 use std::collections::HashMap;
@@ -13,7 +14,7 @@ struct Data {
     timer: u64,
     fps_mult: f32,
     frame: usize,
-    frames: Vec<ImageRenderRect>,
+    frames: Vec<Rect>,
     frame_range: (usize, usize),
     animations: HashMap<String, (usize, usize)>,
 }
@@ -104,7 +105,7 @@ pub fn make_animated_image(
         let mut d = Data::default();
         while (y_pos + height as u32) < texture_info.height {
             while (x_pos + width as u32) < texture_info.width {
-                d.frames.push(ImageRenderRect {
+                d.frames.push(Rect {
                     x: x_pos as f32,
                     y: y_pos as f32,
                     w: width,
@@ -127,7 +128,7 @@ pub fn make_animated_image(
 
     {
         let mut img = Image::with_texture("ai-texture", &texture_info, width, height);
-        img.r_rect = Some(ImageRenderRect {
+        img.r_rect = Some(Rect {
             x: 0.,
             y: 0.,
             w: width,
