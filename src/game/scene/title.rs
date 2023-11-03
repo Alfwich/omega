@@ -2,6 +2,7 @@ use crate::app::App;
 use crate::core::component::audio_clip::AudioClip;
 use crate::core::component::component::Component;
 use crate::core::component::image::Image;
+use crate::core::component::offset::{Offset, OFFSET_NAME};
 use crate::core::component::text::Text;
 use crate::core::entity::animated_image::{
     animated_image_add_animation, animated_image_set_animation, make_animated_image,
@@ -10,6 +11,7 @@ use crate::core::entity::entity::{Entity, EntityFns};
 use crate::core::event::Event;
 use crate::core::renderer::renderer::Renderer;
 use crate::core::renderer::renderer::Viewport;
+use crate::core::resource::AsyncLoadHandle;
 use crate::game::entity::button::make_button;
 use crate::util::rect::Rect;
 
@@ -24,6 +26,9 @@ struct Data {
     counter: f32,
     left_down: bool,
     right_down: bool,
+    async_local_handle: Option<AsyncLoadHandle>,
+    async_remote_handle: Option<AsyncLoadHandle>,
+    async_quad_handle: Option<AsyncLoadHandle>,
 }
 
 impl Component for Data {
@@ -71,6 +76,12 @@ fn update_title(e: &mut Entity, _app: &App, dt: f32) {
         let button = e.find_child_by_name("test_button").unwrap();
         button.set_x(d.counter.cos() * 50. * PI * 2. + 300.);
         button.set_y(d.counter.sin() * 50. * PI * 2. + 300.);
+    }
+
+    {
+        let offset = e.find_component::<Offset>(OFFSET_NAME).unwrap();
+        offset.x = d.counter.cos() * 5. * PI * 2.;
+        offset.y = d.counter.sin() * 5. * PI * 2.;
     }
     {
         let test_quad = e.find_component::<Image>("test-quad").unwrap();
@@ -204,17 +215,28 @@ fn handle_event(e: &mut Entity, app: &mut Option<&mut App>, ev: &Event) {
             _ => {}
         },
         Event::ImageLoadEvent(img_data) => {
-            if img_data.url == REMOTE_IMAGE_URL {
-                {
+            let data = e.find_component::<Data>("data").unwrap().clone();
+            let handle_id = img_data.handle_id;
+
+            if let Some(async_handle) = data.async_remote_handle {
+                if async_handle.id == handle_id {
                     let card = e.find_component::<Image>("card").unwrap();
                     card.apply_image(img_data);
                 }
-            } else if img_data.url == DISK_IMAGE_PATH {
-                let async_local = e.find_component::<Image>("async_local").unwrap();
-                async_local.apply_image(img_data)
-            } else if img_data.url == DISK_IMAGE_QUAD {
-                let quad_cmp = e.find_component::<Image>("test-quad").unwrap();
-                quad_cmp.apply_image(img_data)
+            }
+
+            if let Some(async_handle) = data.async_local_handle {
+                if async_handle.id == handle_id {
+                    let async_local = e.find_component::<Image>("async_local").unwrap();
+                    async_local.apply_image(img_data)
+                }
+            }
+
+            if let Some(async_handle) = data.async_quad_handle {
+                if async_handle.id == handle_id {
+                    let quad_cmp = e.find_component::<Image>("test-quad").unwrap();
+                    quad_cmp.apply_image(img_data)
+                }
             }
         }
         _ => {}
@@ -230,7 +252,9 @@ pub fn make_title(app: &mut App, viewport: &Viewport) -> Entity {
         },
     );
 
-    e.add_component(Data::default());
+    let mut data = Data::default();
+
+    e.add_component(Offset::default());
 
     {
         let texture_info = app
@@ -250,7 +274,11 @@ pub fn make_title(app: &mut App, viewport: &Viewport) -> Entity {
     }
 
     {
-        app.resource.load_image_from_disk_async(DISK_IMAGE_PATH);
+        data.async_local_handle = app
+            .resource
+            .load_image_from_disk_async(DISK_IMAGE_PATH)
+            .ok();
+
         let mut async_local = Image::new("async_local");
         async_local.x = 1000.;
         async_local.y = 1000.;
@@ -258,7 +286,10 @@ pub fn make_title(app: &mut App, viewport: &Viewport) -> Entity {
     }
 
     {
-        app.resource.load_image_from_url_async(REMOTE_IMAGE_URL);
+        data.async_remote_handle = app
+            .resource
+            .load_image_from_url_async(REMOTE_IMAGE_URL)
+            .ok();
         e.add_component(Image::new("card"));
     }
 
@@ -297,7 +328,10 @@ pub fn make_title(app: &mut App, viewport: &Viewport) -> Entity {
     }
 
     {
-        app.resource.load_image_from_disk_async(DISK_IMAGE_QUAD);
+        data.async_quad_handle = app
+            .resource
+            .load_image_from_disk_async(DISK_IMAGE_QUAD)
+            .ok();
 
         let mut image = Image::new("test-quad");
         image.x = viewport.window_size.0 / 2.;
@@ -333,6 +367,8 @@ pub fn make_title(app: &mut App, viewport: &Viewport) -> Entity {
 
         e.add_child(animated_image);
     }
+
+    e.add_component(data);
 
     e
 }

@@ -24,8 +24,9 @@ pub struct ImageLoadPayload {
     pub height: u32,
 }
 
+#[derive(Debug, Default, Clone, Copy)]
 pub struct AsyncLoadHandle {
-    pub handle: u32,
+    pub id: u32,
 }
 
 pub enum AsyncLoadError {
@@ -123,7 +124,7 @@ impl Default for Resources {
             remote_image_loading: HashSet::new(),
             remote_image_work_tx: in_tx,
             remote_image_rx: out_rx,
-            handle_id: 100,
+            handle_id: 0,
             _thread_proc_join_handle: Some(thread::spawn(move || {
                 image_loading_proc_thread(in_rx, out_tx)
             })),
@@ -205,9 +206,7 @@ impl Resources {
                 println!("Failed to send async image load request: {:?}", msg);
                 Err(AsyncLoadError::FailedToCommunicateWithResourceThread)
             }
-            _ => Ok(AsyncLoadHandle {
-                handle: self.handle_id,
-            }),
+            _ => Ok(AsyncLoadHandle { id: self.handle_id }),
         }
     }
 
@@ -240,9 +239,7 @@ impl Resources {
                 println!("Failed to send async image load request {:?}", msg);
                 Err(AsyncLoadError::FailedToCommunicateWithResourceThread)
             }
-            _ => Ok(AsyncLoadHandle {
-                handle: self.handle_id,
-            }),
+            _ => Ok(AsyncLoadHandle { id: self.handle_id }),
         }
     }
 

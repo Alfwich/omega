@@ -2,6 +2,7 @@ use sfml::window::Event as SFMLEvent;
 
 pub struct ImageLoadEventPayload {
     pub url: String,
+    pub handle_id: u32,
     pub texture_id: u32,
     pub width: u32,
     pub height: u32,

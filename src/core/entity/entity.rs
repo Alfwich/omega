@@ -2,6 +2,7 @@ use std::default;
 
 use crate::app::App;
 use crate::core::component::component::Component;
+use crate::core::component::offset::{self, Offset, OFFSET_NAME};
 use crate::core::event::{Event, UpdateRenderablePayload};
 use crate::core::renderer::renderer::Renderer;
 
@@ -92,14 +93,27 @@ impl Entity {
         }
     }
 
-    pub fn render_components(&self, renderer: &mut Renderer) {
+    pub fn render_components(&mut self, renderer: &mut Renderer) {
+        let offset = match self.find_component::<Offset>(OFFSET_NAME) {
+            Ok(offset) => (offset.x, offset.y),
+            _ => (0., 0.),
+        };
+
+        // Push offset
+        renderer.offset.0 += offset.0;
+        renderer.offset.1 += offset.1;
+
         for cmp in &self.components {
             cmp.render(renderer);
         }
 
-        for ent in &self.children {
+        for ent in &mut self.children {
             ent.render_components(renderer);
         }
+
+        // Pop offset
+        renderer.offset.0 -= offset.0;
+        renderer.offset.1 -= offset.1;
     }
 
     // Functions to support "renderable" entities
