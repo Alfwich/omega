@@ -1,3 +1,5 @@
+use std::default;
+
 use crate::app::App;
 use crate::core::component::component::Component;
 use crate::core::event::{Event, UpdateRenderablePayload};
@@ -104,12 +106,7 @@ impl Entity {
     pub fn set_x(&mut self, x: f32) {
         let e = Event::UpdateRenderable(UpdateRenderablePayload {
             x: Some(x),
-            y: None,
-            w: None,
-            h: None,
-            r: None,
-            scale_x: None,
-            scale_y: None,
+            ..Default::default()
         });
 
         (self.vtable.event_fn)(self, &mut None, &e);
@@ -117,13 +114,53 @@ impl Entity {
 
     pub fn set_y(&mut self, y: f32) {
         let e = Event::UpdateRenderable(UpdateRenderablePayload {
-            x: None,
             y: Some(y),
-            w: None,
-            h: None,
-            r: None,
-            scale_x: None,
-            scale_y: None,
+            ..Default::default()
+        });
+
+        (self.vtable.event_fn)(self, &mut None, &e);
+    }
+
+    pub fn set_width(&mut self, w: f32) {
+        let e = Event::UpdateRenderable(UpdateRenderablePayload {
+            w: Some(w),
+            ..Default::default()
+        });
+
+        (self.vtable.event_fn)(self, &mut None, &e);
+    }
+
+    pub fn set_height(&mut self, h: f32) {
+        let e = Event::UpdateRenderable(UpdateRenderablePayload {
+            h: Some(h),
+            ..Default::default()
+        });
+
+        (self.vtable.event_fn)(self, &mut None, &e);
+    }
+
+    pub fn set_rotation(&mut self, r: f32) {
+        let e = Event::UpdateRenderable(UpdateRenderablePayload {
+            r: Some(r),
+            ..Default::default()
+        });
+
+        (self.vtable.event_fn)(self, &mut None, &e);
+    }
+
+    pub fn set_scale_x(&mut self, sx: f32) {
+        let e = Event::UpdateRenderable(UpdateRenderablePayload {
+            scale_x: Some(sx),
+            ..Default::default()
+        });
+
+        (self.vtable.event_fn)(self, &mut None, &e);
+    }
+
+    pub fn set_scale_y(&mut self, sy: f32) {
+        let e = Event::UpdateRenderable(UpdateRenderablePayload {
+            scale_y: Some(sy),
+            ..Default::default()
         });
 
         (self.vtable.event_fn)(self, &mut None, &e);

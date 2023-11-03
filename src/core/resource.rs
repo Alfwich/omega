@@ -16,11 +16,21 @@ pub enum ImageLoadPayloadType {
 
 #[derive(Default, Clone)]
 pub struct ImageLoadPayload {
+    pub handle_id: u32,
     pub image_type: ImageLoadPayloadType,
     pub path: String,
     pub texture_id: u32,
     pub width: u32,
     pub height: u32,
+}
+
+pub struct AsyncLoadHandle {
+    pub handle: u32,
+}
+
+pub enum AsyncLoadError {
+    ResourceAlreadyExists(u32),
+    FailedToCommunicateWithResourceThread,
 }
 
 pub struct Resources {
@@ -30,6 +40,7 @@ pub struct Resources {
     remote_image_loading: HashSet<String>,
     remote_image_work_tx: Sender<ImageLoadPayload>,
     remote_image_rx: Receiver<ImageLoadPayload>,
+    handle_id: u32,
 
     // Drop join this
     _thread_proc_join_handle: Option<JoinHandle<()>>,
@@ -43,6 +54,7 @@ fn image_loading_proc_thread(rx: Receiver<ImageLoadPayload>, tx: Sender<ImageLoa
             Ok(payload) => {
                 if payload.texture_id != 0 {
                     if let Err(_msg) = tx.send(ImageLoadPayload {
+                        handle_id: payload.handle_id,
                         image_type: payload.image_type,
                         path: payload.path,
                         texture_id: payload.texture_id,
@@ -61,6 +73,7 @@ fn image_loading_proc_thread(rx: Receiver<ImageLoadPayload>, tx: Sender<ImageLoa
                     ImageLoadPayloadType::Remote => {
                         if let Ok(result) = load_image_from_url(&client, &payload.path) {
                             if let Err(_msg) = tx.send(ImageLoadPayload {
+                                handle_id: payload.handle_id,
                                 image_type: payload.image_type,
                                 path: payload.path,
                                 texture_id: result.texture_id,
@@ -76,6 +89,7 @@ fn image_loading_proc_thread(rx: Receiver<ImageLoadPayload>, tx: Sender<ImageLoa
                     ImageLoadPayloadType::Disk => {
                         if let Ok(result) = load_image_from_disk(&payload.path) {
                             if let Err(_msg) = tx.send(ImageLoadPayload {
+                                handle_id: payload.handle_id,
                                 image_type: payload.image_type,
                                 path: payload.path,
                                 texture_id: result.texture_id,
@@ -109,6 +123,7 @@ impl Default for Resources {
             remote_image_loading: HashSet::new(),
             remote_image_work_tx: in_tx,
             remote_image_rx: out_rx,
+            handle_id: 100,
             _thread_proc_join_handle: Some(thread::spawn(move || {
                 image_loading_proc_thread(in_rx, out_tx)
             })),
@@ -160,47 +175,74 @@ impl Resources {
         }
     }
 
-    pub fn load_image_from_disk_async(&mut self, image_path: &str) {
+    pub fn load_image_from_disk_async(
+        &mut self,
+        image_path: &str,
+    ) -> Result<AsyncLoadHandle, AsyncLoadError> {
         let texture_data = *self
             .texture_data
             .get(image_path)
             .unwrap_or(&Texture::default());
         let image_is_loading = self.remote_image_loading.contains(&image_path.to_string());
         if texture_data.texture_id != 0 || image_is_loading {
-            return;
+            return Err(AsyncLoadError::ResourceAlreadyExists(
+                texture_data.texture_id,
+            ));
         };
 
+        self.handle_id += 1;
+
         self.remote_image_loading.insert(image_path.to_string());
-        if let Err(_msg) = self.remote_image_work_tx.send(ImageLoadPayload {
+        match self.remote_image_work_tx.send(ImageLoadPayload {
+            handle_id: self.handle_id,
             image_type: ImageLoadPayloadType::Disk,
             path: image_path.to_string(),
             texture_id: texture_data.texture_id,
             width: 0,
             height: 0,
         }) {
-            print!("Failed to send async image load request");
+            Err(msg) => {
+                println!("Failed to send async image load request: {:?}", msg);
+                Err(AsyncLoadError::FailedToCommunicateWithResourceThread)
+            }
+            _ => Ok(AsyncLoadHandle {
+                handle: self.handle_id,
+            }),
         }
     }
 
-    pub fn load_image_from_url_async(&mut self, image_url: &str) {
+    pub fn load_image_from_url_async(
+        &mut self,
+        image_url: &str,
+    ) -> Result<AsyncLoadHandle, AsyncLoadError> {
         let texture_info = *self
             .texture_data
             .get(image_url)
             .unwrap_or(&Texture::default());
         let remote_image_is_loading = self.remote_image_loading.contains(&image_url.to_string());
         if texture_info.texture_id != 0 || remote_image_is_loading {
-            return;
+            return Err(AsyncLoadError::ResourceAlreadyExists(
+                texture_info.texture_id,
+            ));
         };
 
+        self.handle_id += 1;
         self.remote_image_loading.insert(image_url.to_string());
-        if let Err(_msg) = self.remote_image_work_tx.send(ImageLoadPayload {
+        match self.remote_image_work_tx.send(ImageLoadPayload {
+            handle_id: self.handle_id,
             image_type: ImageLoadPayloadType::Remote,
             path: image_url.to_string(),
             texture_id: texture_info.texture_id,
             width: 0,
             height: 0,
         }) {
-            print!("Failed to send async image load request");
+            Err(msg) => {
+                println!("Failed to send async image load request {:?}", msg);
+                Err(AsyncLoadError::FailedToCommunicateWithResourceThread)
+            }
+            _ => Ok(AsyncLoadHandle {
+                handle: self.handle_id,
+            }),
         }
     }
 

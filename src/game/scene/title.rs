@@ -4,8 +4,7 @@ use crate::core::component::component::Component;
 use crate::core::component::image::Image;
 use crate::core::component::text::Text;
 use crate::core::entity::animated_image::{
-    animated_image_add_animation, animated_image_set_animation, animated_image_set_scale,
-    make_animated_image,
+    animated_image_add_animation, animated_image_set_animation, make_animated_image,
 };
 use crate::core::entity::entity::{Entity, EntityFns};
 use crate::core::event::Event;
@@ -137,7 +136,7 @@ fn handle_event(e: &mut Entity, app: &mut Option<&mut App>, ev: &Event) {
                     {
                         let animated_image = e.find_child_by_name("test-animated").unwrap();
                         animated_image_set_animation(animated_image, "walking");
-                        animated_image_set_scale(animated_image, (-3., 3.));
+                        animated_image.set_scale_x(-3.);
                     }
                     {
                         let data = e.find_component::<Data>("data").unwrap();
@@ -152,7 +151,7 @@ fn handle_event(e: &mut Entity, app: &mut Option<&mut App>, ev: &Event) {
                     {
                         let animated_image = e.find_child_by_name("test-animated").unwrap();
                         animated_image_set_animation(animated_image, "walking");
-                        animated_image_set_scale(animated_image, (3., 3.));
+                        animated_image.set_scale_x(3.);
                     }
                     {
                         let data = e.find_component::<Data>("data").unwrap();
@@ -320,12 +319,13 @@ pub fn make_title(app: &mut App, viewport: &Viewport) -> Entity {
             DISK_IMAGE_MARIO,
             35.,
             50.,
-            Some((3., 3.)),
             Some(10.),
             Some(crate::core::component::image::ImageRenderType::Nearest),
         );
         animated_image.set_x(500.);
         animated_image.set_y(500.);
+        animated_image.set_scale_x(3.);
+        animated_image.set_scale_y(3.);
         animated_image_add_animation(&mut animated_image, "idle", (0, 0));
         animated_image_add_animation(&mut animated_image, "walking", (1, 4));
         animated_image_add_animation(&mut animated_image, "swim", (26, 31));

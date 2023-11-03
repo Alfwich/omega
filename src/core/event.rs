@@ -1,4 +1,3 @@
-use crate::util::rect::Rect;
 use sfml::window::Event as SFMLEvent;
 
 pub struct ImageLoadEventPayload {
@@ -8,6 +7,7 @@ pub struct ImageLoadEventPayload {
     pub height: u32,
 }
 
+#[derive(Default)]
 pub struct UpdateRenderablePayload {
     pub x: Option<f32>,
     pub y: Option<f32>,
@@ -19,7 +19,12 @@ pub struct UpdateRenderablePayload {
 }
 
 pub enum Event {
+    /// Raw SFMLEvent which Entities can respond to
     SFMLEvent(SFMLEvent),
+
+    /// Async image load data is available
     ImageLoadEvent(ImageLoadEventPayload),
+
+    /// Request from parent Entity to update renderable layout
     UpdateRenderable(UpdateRenderablePayload),
 }

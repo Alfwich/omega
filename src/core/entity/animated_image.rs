@@ -63,6 +63,26 @@ fn handle_event(e: &mut Entity, _app: &mut Option<&mut App>, ev: &Event) {
             if let Some(y) = p.y {
                 img.y = y;
             }
+
+            if let Some(w) = p.w {
+                img.width = w;
+            }
+
+            if let Some(h) = p.h {
+                img.height = h;
+            }
+
+            if let Some(h) = p.h {
+                img.height = h;
+            }
+
+            if let Some(sx) = p.scale_x {
+                img.scale.0 = sx;
+            }
+
+            if let Some(sy) = p.scale_y {
+                img.scale.1 = sy;
+            }
         }
         _ => {}
     }
@@ -80,13 +100,6 @@ pub fn animated_image_add_animation(e: &mut Entity, name: &str, frame_range: (us
     d.animations.insert(name.to_string(), frame_range);
 }
 
-pub fn animated_image_set_scale(e: &mut Entity, scale: (f32, f32)) {
-    {
-        let img = e.find_component::<Image>("ai-texture").unwrap();
-        img.scale = scale;
-    }
-}
-
 pub fn make_animated_image(
     app: &mut App,
     name: &str,
@@ -95,7 +108,6 @@ pub fn make_animated_image(
     // Width/Height of the cell
     width: f32,
     height: f32,
-    scale: Option<(f32, f32)>,
     fps: Option<f32>,
     image_render_type: Option<ImageRenderType>,
 ) -> Entity {
@@ -131,9 +143,10 @@ pub fn make_animated_image(
 
         d.frame_range = (0, d.frames.len());
 
-        if let Some(f) = fps {
-            d.fps_mult = f;
-        }
+        d.fps_mult = match fps {
+            Some(f) => f,
+            _ => 1.,
+        };
 
         e.add_component(d);
     }
@@ -146,10 +159,6 @@ pub fn make_animated_image(
             w: width,
             h: height,
         });
-
-        if let Some(s) = scale {
-            img.scale = s;
-        }
 
         if image_render_type.is_some() {
             img.render_type = image_render_type;
