@@ -215,7 +215,7 @@ fn handle_event(e: &mut Entity, app: &mut Option<&mut App>, ev: &Event) {
             _ => {}
         },
         Event::ImageLoadEvent(img_data) => {
-            let data = e.find_component::<Data>("data").unwrap().clone();
+            let data = *e.find_component::<Data>("data").unwrap();
             let handle_id = img_data.handle_id;
 
             if let Some(async_handle) = data.async_remote_handle {

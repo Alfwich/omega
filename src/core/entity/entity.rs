@@ -1,8 +1,6 @@
-use std::default;
-
 use crate::app::App;
 use crate::core::component::component::Component;
-use crate::core::component::offset::{self, Offset, OFFSET_NAME};
+use crate::core::component::offset::{Offset, OFFSET_NAME};
 use crate::core::event::{Event, UpdateRenderablePayload};
 use crate::core::renderer::renderer::Renderer;
 
