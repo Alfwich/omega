@@ -12,6 +12,8 @@ pub struct ImageLoadEventPayload {
 pub struct UpdateRenderablePayload {
     pub x: Option<f32>,
     pub y: Option<f32>,
+    pub move_x: Option<f32>,
+    pub move_y: Option<f32>,
     pub w: Option<f32>,
     pub h: Option<f32>,
     pub r: Option<f32>,

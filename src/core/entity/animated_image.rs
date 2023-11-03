@@ -64,6 +64,14 @@ fn handle_event(e: &mut Entity, _app: &mut Option<&mut App>, ev: &Event) {
                 img.y = y;
             }
 
+            if let Some(mx) = p.move_x {
+                img.x += mx;
+            }
+
+            if let Some(my) = p.move_y {
+                img.y += my;
+            }
+
             if let Some(w) = p.w {
                 img.width = w;
             }
@@ -72,8 +80,8 @@ fn handle_event(e: &mut Entity, _app: &mut Option<&mut App>, ev: &Event) {
                 img.height = h;
             }
 
-            if let Some(h) = p.h {
-                img.height = h;
+            if let Some(r) = p.r {
+                img.rotation = r;
             }
 
             if let Some(sx) = p.scale_x {

@@ -124,9 +124,27 @@ impl Entity {
         (self.vtable.event_fn)(self, &mut None, &e);
     }
 
+    pub fn move_x(&mut self, x: f32) {
+        let e = Event::UpdateRenderable(UpdateRenderablePayload {
+            move_x: Some(x),
+            ..Default::default()
+        });
+
+        (self.vtable.event_fn)(self, &mut None, &e);
+    }
+
     pub fn set_y(&mut self, y: f32) {
         let e = Event::UpdateRenderable(UpdateRenderablePayload {
             y: Some(y),
+            ..Default::default()
+        });
+
+        (self.vtable.event_fn)(self, &mut None, &e);
+    }
+
+    pub fn move_y(&mut self, y: f32) {
+        let e = Event::UpdateRenderable(UpdateRenderablePayload {
+            move_y: Some(y),
             ..Default::default()
         });
 

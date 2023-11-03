@@ -5,7 +5,7 @@ use crate::core::event::ImageLoadEventPayload;
 use crate::core::renderer::renderer::Renderer;
 use crate::core::renderer::window::{make_window, WindowConfig, WindowStyle};
 use crate::core::resource::Resources;
-use crate::game::scene::title;
+use crate::game::scene::testbed::make_testbed;
 use crate::game::state::GameState;
 use crate::util::timer::Timer;
 use sfml::window::{Event as SEvent, Key, Window};
@@ -70,7 +70,7 @@ impl App {
         {
             let mut root = Entity::default();
             root.add_component(PreFrame::default());
-            root.add_child(title::make_title(self, &renderer.viewport));
+            root.add_child(make_testbed(self, &renderer.viewport));
 
             while window.is_open() {
                 let dt = frame_timer.dt();

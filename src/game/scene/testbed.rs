@@ -48,7 +48,7 @@ static DISK_IMAGE_PATH: &str = "res/img/motorcycle.png";
 static DISK_IMAGE_QUAD: &str = "res/img/test-clip.png";
 static DISK_IMAGE_MARIO: &str = "res/img/mario.png";
 
-fn update_title(e: &mut Entity, _app: &App, dt: f32) {
+fn update_testbed(e: &mut Entity, _app: &App, dt: f32) {
     let d;
     {
         let data = e.find_component::<Data>("data").unwrap();
@@ -118,15 +118,12 @@ fn update_title(e: &mut Entity, _app: &App, dt: f32) {
     {
         // HACK: Move this to a game entity since we should not be accessing the 'ai-texture'
         let animated_image = e.find_child_by_name("test-animated").unwrap();
-        let img = animated_image
-            .find_component::<Image>("ai-texture")
-            .unwrap();
         match (d.left_down, d.right_down) {
             (true, false) => {
-                img.x -= 100. * dt;
+                animated_image.move_x(-100. * dt);
             }
             (false, true) => {
-                img.x += 100. * dt;
+                animated_image.move_x(100. * dt);
             }
             _ => {}
         }
@@ -142,7 +139,10 @@ fn handle_event(e: &mut Entity, app: &mut Option<&mut App>, ev: &Event) {
                 card.y = *y as f32;
             }
             SFMLEvent::KeyPressed { code, .. } => match code {
-                &Key::W => {}
+                &Key::W => {
+                    let animated_image = e.find_child_by_name("test-animated").unwrap();
+                    animated_image.move_y(-10.);
+                }
                 &Key::A => {
                     {
                         let animated_image = e.find_child_by_name("test-animated").unwrap();
@@ -157,6 +157,7 @@ fn handle_event(e: &mut Entity, app: &mut Option<&mut App>, ev: &Event) {
                 &Key::S => {
                     let animated_image = e.find_child_by_name("test-animated").unwrap();
                     animated_image_set_animation(animated_image, "swim");
+                    animated_image.move_y(10.);
                 }
                 &Key::D => {
                     {
@@ -243,11 +244,11 @@ fn handle_event(e: &mut Entity, app: &mut Option<&mut App>, ev: &Event) {
     }
 }
 
-pub fn make_title(app: &mut App, viewport: &Viewport) -> Entity {
+pub fn make_testbed(app: &mut App, viewport: &Viewport) -> Entity {
     let mut e = Entity::new(
-        "title",
+        "testbed",
         EntityFns {
-            update_fn: update_title,
+            update_fn: update_testbed,
             event_fn: handle_event,
         },
     );
@@ -360,6 +361,9 @@ pub fn make_title(app: &mut App, viewport: &Viewport) -> Entity {
         animated_image.set_y(500.);
         animated_image.set_scale_x(3.);
         animated_image.set_scale_y(3.);
+        animated_image.set_width(35.);
+        animated_image.set_height(50.);
+        animated_image.set_rotation(45.);
         animated_image_add_animation(&mut animated_image, "idle", (0, 0));
         animated_image_add_animation(&mut animated_image, "walking", (1, 4));
         animated_image_add_animation(&mut animated_image, "swim", (26, 31));
