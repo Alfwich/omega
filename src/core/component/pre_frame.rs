@@ -10,7 +10,7 @@ pub struct PreFrame {}
 
 impl Component for PreFrame {
     fn get_name(&self) -> &str {
-        "pre_frame"
+        "__pre_frame__"
     }
 
     fn render(&self, renderer: &Renderer) {

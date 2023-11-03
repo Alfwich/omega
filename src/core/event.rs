@@ -1,8 +1,9 @@
 use sfml::window::Event as SFMLEvent;
 
+use super::resource::AsyncLoadHandle;
+
 pub struct ImageLoadEventPayload {
-    pub url: String,
-    pub handle_id: u32,
+    pub handle: AsyncLoadHandle,
     pub texture_id: u32,
     pub width: u32,
     pub height: u32,
@@ -22,12 +23,12 @@ pub struct UpdateRenderablePayload {
 }
 
 pub enum Event {
-    /// Raw SFMLEvent which Entities can respond to
+    /// Raw SFMLEvent
     SFMLEvent(SFMLEvent),
 
     /// Async image load data is available
     ImageLoadEvent(ImageLoadEventPayload),
 
-    /// Request from parent Entity to update renderable layout
+    /// Request from parent Entity to update some renderable feature
     UpdateRenderable(UpdateRenderablePayload),
 }

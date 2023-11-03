@@ -39,8 +39,7 @@ fn handle_window_events(window: &mut Window, app: &mut App, root: &mut Entity) {
         if let Some(image_load_result) = app.resource.recv_load_events() {
             let load_info = image_load_result.1;
             image_load_events.push(ImageLoadEvent(ImageLoadEventPayload {
-                handle_id: load_info.handle_id,
-                url: image_load_result.0,
+                handle: load_info.handle,
                 texture_id: load_info.texture_id,
                 width: load_info.width,
                 height: load_info.height,
