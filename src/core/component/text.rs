@@ -39,10 +39,10 @@ impl Component for Text {
         &self.name
     }
 
-    fn render(&self, app: &App) {
+    fn render(&self, app: &App, parent_offset: (f32, f32)) {
         let mvp = app.renderer.as_ref().unwrap().make_mvp(
-            self.x as f32,
-            self.y as f32,
+            self.x as f32 + parent_offset.0,
+            self.y as f32 + parent_offset.1,
             self.width as f32,
             self.height as f32,
             self.rotation,

@@ -93,11 +93,11 @@ impl Entity {
     pub fn render_components(&mut self, app: &App, parent_offset: (f32, f32)) {
         let offset = match self.find_component::<Offset>(OFFSET_NAME) {
             Ok(offset) => (parent_offset.0 + offset.x, parent_offset.1 + offset.y),
-            _ => (0., 0.),
+            _ => parent_offset,
         };
 
         for cmp in &self.components {
-            cmp.render(app);
+            cmp.render(app, offset);
         }
 
         for ent in &mut self.children {

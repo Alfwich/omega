@@ -13,7 +13,7 @@ impl Component for PreFrame {
         "__pre_frame__"
     }
 
-    fn render(&self, app: &App) {
+    fn render(&self, app: &App, _parent_offset: (f32, f32)) {
         unsafe {
             Clear(COLOR_BUFFER_BIT | DEPTH_BUFFER_BIT);
             Viewport(

@@ -82,11 +82,11 @@ impl Component for Image {
         &self.name
     }
 
-    fn render(&self, app: &App) {
+    fn render(&self, app: &App, parent_offset: (f32, f32)) {
         if let Some(texture) = self.texture {
             let mvp = app.renderer.as_ref().unwrap().make_mvp(
-                self.x,
-                self.y,
+                self.x + parent_offset.0,
+                self.y + parent_offset.1,
                 self.width,
                 self.height,
                 self.rotation,
