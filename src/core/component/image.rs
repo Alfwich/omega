@@ -1,7 +1,7 @@
 use crate::app::App;
 use crate::core::component::component::Component;
 use crate::core::renderer::app_gl::Texture;
-use crate::core::renderer::renderer::Renderer;
+
 use crate::util::rect::Rect;
 
 use core::ffi::c_void;

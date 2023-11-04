@@ -9,7 +9,7 @@ use crate::core::entity::animated_image::{
 };
 use crate::core::entity::entity::{Entity, EntityFns, RenderableEntity};
 use crate::core::event::Event;
-use crate::core::renderer::renderer::Renderer;
+
 use crate::core::resource::AsyncLoadHandle;
 use crate::game::entity::button::make_button;
 use crate::util::rect::Rect;

@@ -3,7 +3,7 @@ use crate::core::component::component::Component;
 use crate::core::component::image::{Image, ImageRenderType};
 use crate::core::entity::entity::{Entity, EntityFns};
 use crate::core::event::{Event, UpdateRenderablePayload};
-use crate::core::renderer::renderer::Renderer;
+
 use crate::util::rect::Rect;
 
 use core::any::Any;

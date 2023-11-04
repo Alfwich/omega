@@ -4,7 +4,6 @@ use crate::core::component::component::Component;
 use crate::core::component::image::Image;
 use crate::core::entity::entity::{Entity, EntityFns};
 use crate::core::event::{Event, UpdateRenderablePayload};
-use crate::core::renderer::renderer::Renderer;
 
 use sfml::window::Event as SFMLEvent;
 
