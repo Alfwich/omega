@@ -1,9 +1,9 @@
-use crate::core::renderer::renderer::Renderer;
-
 use std::any::Any;
+
+use crate::app::App;
 
 pub trait Component {
     fn get_name(&self) -> &str;
-    fn render(&self, _renderer: &Renderer) {}
+    fn render(&self, app: &App) {}
     fn as_any(&mut self) -> &mut dyn Any;
 }

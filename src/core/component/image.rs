@@ -1,3 +1,4 @@
+use crate::app::App;
 use crate::core::component::component::Component;
 use crate::core::renderer::app_gl::Texture;
 use crate::core::renderer::renderer::Renderer;
@@ -81,9 +82,9 @@ impl Component for Image {
         &self.name
     }
 
-    fn render(&self, renderer: &Renderer) {
+    fn render(&self, app: &App) {
         if let Some(texture) = self.texture {
-            let mvp = renderer.make_mvp(
+            let mvp = app.renderer.as_ref().unwrap().make_mvp(
                 self.x,
                 self.y,
                 self.width,
@@ -96,19 +97,19 @@ impl Component for Image {
             unsafe {
                 Enable(BLEND);
                 BlendFunc(SRC_ALPHA, ONE_MINUS_SRC_ALPHA);
-                BindVertexArray(renderer.gl.vao);
-                BindBuffer(ELEMENT_ARRAY_BUFFER, renderer.gl.ebo);
-                UseProgram(renderer.gl.image_program_id);
+                BindVertexArray(app.renderer.as_ref().unwrap().gl.vao);
+                BindBuffer(ELEMENT_ARRAY_BUFFER, app.renderer.as_ref().unwrap().gl.ebo);
+                UseProgram(app.renderer.as_ref().unwrap().gl.image_program_id);
 
                 UniformMatrix4fv(
-                    renderer.gl.image_program_mvp_loc,
+                    app.renderer.as_ref().unwrap().gl.image_program_mvp_loc,
                     1,
                     FALSE,
                     mvp.data.as_slice().as_ptr(),
                 );
 
                 Uniform4f(
-                    renderer.gl.image_program_color_loc,
+                    app.renderer.as_ref().unwrap().gl.image_program_color_loc,
                     self.color.x,
                     self.color.y,
                     self.color.z,
@@ -123,11 +124,23 @@ impl Component for Image {
                         let y = r.y / texture.height as f32;
                         let w = r.w / texture.width as f32;
                         let h = r.h / texture.height as f32;
-                        Uniform4f(renderer.gl.image_program_uv_rect_loc, x, y, w, h);
+                        Uniform4f(
+                            app.renderer.as_ref().unwrap().gl.image_program_uv_rect_loc,
+                            x,
+                            y,
+                            w,
+                            h,
+                        );
                     }
                     _ => {
                         // Default rect which renders the whole image
-                        Uniform4f(renderer.gl.image_program_uv_rect_loc, 0.0, 0.0, 1.0, 1.0);
+                        Uniform4f(
+                            app.renderer.as_ref().unwrap().gl.image_program_uv_rect_loc,
+                            0.0,
+                            0.0,
+                            1.0,
+                            1.0,
+                        );
                     }
                 };
 

@@ -1,5 +1,4 @@
 use crate::core::component::component::Component;
-use crate::core::renderer::renderer::Renderer;
 
 use core::any::Any;
 
@@ -15,8 +14,6 @@ impl Component for Offset {
     fn get_name(&self) -> &str {
         OFFSET_NAME
     }
-
-    fn render(&self, _renderer: &Renderer) {}
 
     fn as_any(&mut self) -> &mut dyn Any {
         self

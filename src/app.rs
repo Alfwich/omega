@@ -14,6 +14,7 @@ use sfml::window::{Event as SEvent, Key, Window};
 pub struct App {
     pub state: GameState,
     pub resource: Resources,
+    pub renderer: Option<Renderer>,
 }
 
 fn handle_window_events(window: &mut Window, app: &mut App, root: &mut Entity) {
@@ -63,13 +64,16 @@ impl App {
         window_config.vsync_enabled = false;
         let mut window = make_window(&window_config);
 
-        let mut renderer = Renderer::new(window_config.width as f32, window_config.height as f32);
+        self.renderer = Some(Renderer::new(
+            window_config.width as f32,
+            window_config.height as f32,
+        ));
         let mut frame_timer = Timer::default();
 
         {
             let mut root = Entity::default();
             root.add_component(PreFrame::default());
-            root.add_child(make_testbed(self, &renderer.viewport));
+            root.add_child(make_testbed(self));
 
             while window.is_open() {
                 let dt = frame_timer.dt();
@@ -78,7 +82,7 @@ impl App {
                 handle_window_events(&mut window, self, &mut root);
                 root.update(self, dt);
                 window.set_active(true);
-                root.render_components(&mut renderer);
+                root.render_components(self, (0., 0.));
                 window.display();
             }
         }

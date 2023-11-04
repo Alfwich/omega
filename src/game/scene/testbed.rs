@@ -7,10 +7,9 @@ use crate::core::component::text::Text;
 use crate::core::entity::animated_image::{
     animated_image_add_animation, animated_image_set_animation, make_animated_image,
 };
-use crate::core::entity::entity::{Entity, EntityFns};
+use crate::core::entity::entity::{Entity, EntityFns, RenderableEntity};
 use crate::core::event::Event;
 use crate::core::renderer::renderer::Renderer;
-use crate::core::renderer::renderer::Viewport;
 use crate::core::resource::AsyncLoadHandle;
 use crate::game::entity::button::make_button;
 use crate::util::rect::Rect;
@@ -35,8 +34,6 @@ impl Component for Data {
     fn get_name(&self) -> &str {
         "data"
     }
-
-    fn render(&self, _renderer: &Renderer) {}
 
     fn as_any(&mut self) -> &mut dyn Any {
         self
@@ -80,8 +77,8 @@ fn update_testbed(e: &mut Entity, _app: &App, dt: f32) {
 
     {
         let offset = e.find_component::<Offset>(OFFSET_NAME).unwrap();
-        offset.x = d.counter.cos() * 5. * PI * 2.;
-        offset.y = d.counter.sin() * 5. * PI * 2.;
+        offset.x = d.counter.cos() * 50. * PI * 2.;
+        offset.y = d.counter.sin() * 50. * PI * 2.;
     }
     {
         let test_quad = e.find_component::<Image>("test-quad").unwrap();
@@ -244,7 +241,7 @@ fn handle_event(e: &mut Entity, app: &mut Option<&mut App>, ev: &Event) {
     }
 }
 
-pub fn make_testbed(app: &mut App, viewport: &Viewport) -> Entity {
+pub fn make_testbed(app: &mut App) -> Entity {
     let mut e = Entity::new(
         "testbed",
         EntityFns {
@@ -269,8 +266,8 @@ pub fn make_testbed(app: &mut App, viewport: &Viewport) -> Entity {
             texture_info.width as f32,
             texture_info.height as f32,
         );
-        image.x = viewport.window_size.0 / 2.;
-        image.y = viewport.window_size.1 / 2.;
+        image.x = app.renderer.as_ref().unwrap().viewport.window_size.0 / 2.;
+        image.y = app.renderer.as_ref().unwrap().viewport.window_size.1 / 2.;
         e.add_component(image);
     }
 
@@ -297,8 +294,8 @@ pub fn make_testbed(app: &mut App, viewport: &Viewport) -> Entity {
     {
         let text_texture = app.resource.load_text_texture("Omega Ω").unwrap();
         let mut text = Text::new("title", &text_texture);
-        text.x = (viewport.window_size.0 / 2.) as i32;
-        text.y = (viewport.window_size.1 / 2.) as i32;
+        text.x = (app.renderer.as_ref().unwrap().viewport.window_size.0 / 2.) as i32;
+        text.y = (app.renderer.as_ref().unwrap().viewport.window_size.1 / 2.) as i32;
         e.add_component(text);
 
         let d = 3;
@@ -309,8 +306,8 @@ pub fn make_testbed(app: &mut App, viewport: &Viewport) -> Entity {
                     .load_text_texture(&format!("Omega {:?}:{:?}", x, y))
                     .unwrap();
                 let mut t = Text::new("tester", &i_texture);
-                t.x = x * (viewport.window_size.0 as i32 / d);
-                t.y = y * (viewport.window_size.1 as i32 / d);
+                t.x = x * (app.renderer.as_ref().unwrap().viewport.window_size.0 as i32 / d);
+                t.y = y * (app.renderer.as_ref().unwrap().viewport.window_size.1 as i32 / d);
                 e.add_component(t);
             }
         }
@@ -323,7 +320,7 @@ pub fn make_testbed(app: &mut App, viewport: &Viewport) -> Entity {
     }
 
     {
-        let mut button = make_button(app, viewport);
+        let mut button = make_button(app);
         button.name = "test_button".to_string();
         e.add_child(button);
     }
@@ -335,8 +332,8 @@ pub fn make_testbed(app: &mut App, viewport: &Viewport) -> Entity {
             .ok();
 
         let mut image = Image::new("test-quad");
-        image.x = viewport.window_size.0 / 2.;
-        image.y = viewport.window_size.1 / 2.;
+        image.x = app.renderer.as_ref().unwrap().viewport.window_size.0 / 2.;
+        image.y = app.renderer.as_ref().unwrap().viewport.window_size.1 / 2.;
         image.r_rect = Some(Rect {
             x: 256.,
             y: 256.,

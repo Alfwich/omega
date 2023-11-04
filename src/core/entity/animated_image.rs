@@ -24,8 +24,6 @@ impl Component for Data {
         "data"
     }
 
-    fn render(&self, _renderer: &Renderer) {}
-
     fn as_any(&mut self) -> &mut dyn Any {
         self
     }

@@ -5,7 +5,6 @@ use crate::core::component::image::Image;
 use crate::core::entity::entity::{Entity, EntityFns};
 use crate::core::event::{Event, UpdateRenderablePayload};
 use crate::core::renderer::renderer::Renderer;
-use crate::core::renderer::renderer::Viewport;
 
 use sfml::window::Event as SFMLEvent;
 
@@ -22,8 +21,6 @@ impl Component for Data {
     fn get_name(&self) -> &str {
         "data"
     }
-
-    fn render(&self, _renderer: &Renderer) {}
 
     fn as_any(&mut self) -> &mut dyn Any {
         self
@@ -110,7 +107,7 @@ fn handle_event(e: &mut Entity, _app: &mut Option<&mut App>, ev: &Event) {
     }
 }
 
-pub fn make_button(app: &mut App, _viewport: &Viewport) -> Entity {
+pub fn make_button(app: &mut App) -> Entity {
     let mut e = Entity::new(
         "button",
         EntityFns {
