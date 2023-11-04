@@ -4,8 +4,14 @@ use crate::core::component::offset::{Offset, OFFSET_NAME};
 use crate::core::event::{Event, UpdateRenderablePayload};
 
 pub struct EntityFns {
+    /// Called once per frame with the deltatime from the previous frame
     pub update_fn: fn(&mut Entity, &App, f32),
+
+    /// Event responder function
     pub event_fn: fn(&mut Entity, &mut Option<&mut App>, &Event),
+
+    /// Called right before the Entitie's components are rendered
+    pub prerender_fn: fn(&mut Entity, parent_offset: (f32, f32)),
 }
 
 impl Default for EntityFns {
@@ -13,6 +19,7 @@ impl Default for EntityFns {
         EntityFns {
             update_fn: |_e, _a, _d| {},
             event_fn: |_e, _a, _ev| {},
+            prerender_fn: |_e, _o| {},
         }
     }
 }
@@ -95,6 +102,8 @@ impl Entity {
             Ok(offset) => (parent_offset.0 + offset.x, parent_offset.1 + offset.y),
             _ => parent_offset,
         };
+
+        (self.vtable.prerender_fn)(self, offset);
 
         for cmp in &self.components {
             cmp.render(app, offset);

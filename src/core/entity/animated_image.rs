@@ -116,6 +116,7 @@ pub fn make_animated_image(
         EntityFns {
             update_fn: update_animated_image,
             event_fn: handle_event,
+            ..Default::default()
         },
     );
 

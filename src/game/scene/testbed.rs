@@ -25,6 +25,7 @@ struct Data {
     counter: f32,
     left_down: bool,
     right_down: bool,
+    parent_offset: (f32, f32),
     async_local_handle: Option<AsyncLoadHandle>,
     async_remote_handle: Option<AsyncLoadHandle>,
     async_quad_handle: Option<AsyncLoadHandle>,
@@ -241,12 +242,17 @@ fn handle_event(e: &mut Entity, app: &mut Option<&mut App>, ev: &Event) {
     }
 }
 
+fn prerender_testbed(e: &mut Entity, parent_offset: (f32, f32)) {
+    e.find_component::<Data>("data").unwrap().parent_offset = parent_offset;
+}
+
 pub fn make_testbed(app: &mut App) -> Entity {
     let mut e = Entity::new(
         "testbed",
         EntityFns {
             update_fn: update_testbed,
             event_fn: handle_event,
+            prerender_fn: prerender_testbed,
         },
     );
 

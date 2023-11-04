@@ -13,6 +13,7 @@ use core::any::Any;
 struct Data {
     x: f32,
     y: f32,
+    parent_offset: (f32, f32),
     button_down: bool,
 }
 
@@ -30,8 +31,8 @@ fn update_button(e: &mut Entity, _app: &App, _dt: f32) {
     let data = *e.find_component::<Data>("data").unwrap();
     let over_button;
     {
-        let render_offset_x = 0.;
-        let render_offset_y = 0.;
+        let render_offset_x = data.parent_offset.0;
+        let render_offset_y = data.parent_offset.1;
         let button = e.find_component::<Image>("background").unwrap();
         let bx = render_offset_x + button.x;
         let by = render_offset_y + button.y;
@@ -106,12 +107,17 @@ fn handle_event(e: &mut Entity, _app: &mut Option<&mut App>, ev: &Event) {
     }
 }
 
+fn prerender_button(e: &mut Entity, parent_offset: (f32, f32)) {
+    e.find_component::<Data>("data").unwrap().parent_offset = parent_offset;
+}
+
 pub fn make_button(app: &mut App) -> Entity {
     let mut e = Entity::new(
         "button",
         EntityFns {
             update_fn: update_button,
             event_fn: handle_event,
+            prerender_fn: prerender_button,
         },
     );
 
