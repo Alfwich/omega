@@ -116,83 +116,47 @@ impl Entity {
 
     // Functions to support "renderable" entities
     pub fn set_x(&mut self, x: f32) {
-        let e = Event::UpdateRenderable(UpdateRenderablePayload {
-            x: Some(x),
-            ..Default::default()
-        });
-
+        let e = Event::UpdateRenderable(UpdateRenderablePayload::X(x));
         (self.vtable.event_fn)(self, &mut None, &e);
     }
 
-    pub fn move_x(&mut self, x: f32) {
-        let e = Event::UpdateRenderable(UpdateRenderablePayload {
-            move_x: Some(x),
-            ..Default::default()
-        });
-
+    pub fn move_x(&mut self, mx: f32) {
+        let e = Event::UpdateRenderable(UpdateRenderablePayload::MoveX(mx));
         (self.vtable.event_fn)(self, &mut None, &e);
     }
 
     pub fn set_y(&mut self, y: f32) {
-        let e = Event::UpdateRenderable(UpdateRenderablePayload {
-            y: Some(y),
-            ..Default::default()
-        });
-
+        let e = Event::UpdateRenderable(UpdateRenderablePayload::Y(y));
         (self.vtable.event_fn)(self, &mut None, &e);
     }
 
-    pub fn move_y(&mut self, y: f32) {
-        let e = Event::UpdateRenderable(UpdateRenderablePayload {
-            move_y: Some(y),
-            ..Default::default()
-        });
-
+    pub fn move_y(&mut self, my: f32) {
+        let e = Event::UpdateRenderable(UpdateRenderablePayload::MoveY(my));
         (self.vtable.event_fn)(self, &mut None, &e);
     }
 
     pub fn set_width(&mut self, w: f32) {
-        let e = Event::UpdateRenderable(UpdateRenderablePayload {
-            w: Some(w),
-            ..Default::default()
-        });
-
+        let e = Event::UpdateRenderable(UpdateRenderablePayload::Width(w));
         (self.vtable.event_fn)(self, &mut None, &e);
     }
 
     pub fn set_height(&mut self, h: f32) {
-        let e = Event::UpdateRenderable(UpdateRenderablePayload {
-            h: Some(h),
-            ..Default::default()
-        });
-
+        let e = Event::UpdateRenderable(UpdateRenderablePayload::Height(h));
         (self.vtable.event_fn)(self, &mut None, &e);
     }
 
     pub fn set_rotation(&mut self, r: f32) {
-        let e = Event::UpdateRenderable(UpdateRenderablePayload {
-            r: Some(r),
-            ..Default::default()
-        });
-
+        let e = Event::UpdateRenderable(UpdateRenderablePayload::Rotation(r));
         (self.vtable.event_fn)(self, &mut None, &e);
     }
 
     pub fn set_scale_x(&mut self, sx: f32) {
-        let e = Event::UpdateRenderable(UpdateRenderablePayload {
-            scale_x: Some(sx),
-            ..Default::default()
-        });
-
+        let e = Event::UpdateRenderable(UpdateRenderablePayload::ScaleX(sx));
         (self.vtable.event_fn)(self, &mut None, &e);
     }
 
     pub fn set_scale_y(&mut self, sy: f32) {
-        let e = Event::UpdateRenderable(UpdateRenderablePayload {
-            scale_y: Some(sy),
-            ..Default::default()
-        });
-
+        let e = Event::UpdateRenderable(UpdateRenderablePayload::ScaleY(sy));
         (self.vtable.event_fn)(self, &mut None, &e);
     }
 }

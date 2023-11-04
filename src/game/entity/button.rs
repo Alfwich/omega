@@ -3,7 +3,7 @@ use crate::core::component::audio_clip::AudioClip;
 use crate::core::component::component::Component;
 use crate::core::component::image::Image;
 use crate::core::entity::entity::{Entity, EntityFns};
-use crate::core::event::Event;
+use crate::core::event::{Event, UpdateRenderablePayload};
 use crate::core::renderer::renderer::Renderer;
 use crate::core::renderer::renderer::Viewport;
 
@@ -90,13 +90,20 @@ fn handle_event(e: &mut Entity, _app: &mut Option<&mut App>, ev: &Event) {
         },
         Event::UpdateRenderable(p) => {
             let button = e.find_component::<Image>("background").unwrap();
-
-            if let Some(x) = p.x {
-                button.x = x;
-            }
-
-            if let Some(y) = p.y {
-                button.y = y;
+            match p {
+                UpdateRenderablePayload::X(x) => {
+                    button.x = *x;
+                }
+                UpdateRenderablePayload::MoveX(mx) => {
+                    button.x += *mx;
+                }
+                UpdateRenderablePayload::Y(y) => {
+                    button.y = *y;
+                }
+                UpdateRenderablePayload::MoveY(my) => {
+                    button.y += *my;
+                }
+                _ => {}
             }
         }
         _ => {}

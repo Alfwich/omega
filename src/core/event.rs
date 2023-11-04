@@ -9,17 +9,16 @@ pub struct ImageLoadEventPayload {
     pub height: u32,
 }
 
-#[derive(Default)]
-pub struct UpdateRenderablePayload {
-    pub x: Option<f32>,
-    pub y: Option<f32>,
-    pub move_x: Option<f32>,
-    pub move_y: Option<f32>,
-    pub w: Option<f32>,
-    pub h: Option<f32>,
-    pub r: Option<f32>,
-    pub scale_x: Option<f32>,
-    pub scale_y: Option<f32>,
+pub enum UpdateRenderablePayload {
+    X(f32),
+    Y(f32),
+    MoveX(f32),
+    MoveY(f32),
+    Width(f32),
+    Height(f32),
+    Rotation(f32),
+    ScaleX(f32),
+    ScaleY(f32),
 }
 
 pub enum Event {

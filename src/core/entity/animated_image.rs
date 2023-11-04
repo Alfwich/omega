@@ -2,7 +2,7 @@ use crate::app::App;
 use crate::core::component::component::Component;
 use crate::core::component::image::{Image, ImageRenderType};
 use crate::core::entity::entity::{Entity, EntityFns};
-use crate::core::event::Event;
+use crate::core::event::{Event, UpdateRenderablePayload};
 use crate::core::renderer::renderer::Renderer;
 use crate::util::rect::Rect;
 
@@ -56,40 +56,34 @@ fn handle_event(e: &mut Entity, _app: &mut Option<&mut App>, ev: &Event) {
         Event::UpdateRenderable(p) => {
             let img = e.find_component::<Image>("ai-texture").unwrap();
 
-            if let Some(x) = p.x {
-                img.x = x;
-            }
-
-            if let Some(y) = p.y {
-                img.y = y;
-            }
-
-            if let Some(mx) = p.move_x {
-                img.x += mx;
-            }
-
-            if let Some(my) = p.move_y {
-                img.y += my;
-            }
-
-            if let Some(w) = p.w {
-                img.width = w;
-            }
-
-            if let Some(h) = p.h {
-                img.height = h;
-            }
-
-            if let Some(r) = p.r {
-                img.rotation = r;
-            }
-
-            if let Some(sx) = p.scale_x {
-                img.scale.0 = sx;
-            }
-
-            if let Some(sy) = p.scale_y {
-                img.scale.1 = sy;
+            match p {
+                UpdateRenderablePayload::X(x) => {
+                    img.x = *x;
+                }
+                UpdateRenderablePayload::MoveX(mx) => {
+                    img.x += *mx;
+                }
+                UpdateRenderablePayload::Y(y) => {
+                    img.y = *y;
+                }
+                UpdateRenderablePayload::MoveY(my) => {
+                    img.y += *my;
+                }
+                UpdateRenderablePayload::Width(w) => {
+                    img.width = *w;
+                }
+                UpdateRenderablePayload::Height(h) => {
+                    img.height = *h;
+                }
+                UpdateRenderablePayload::Rotation(r) => {
+                    img.rotation = *r;
+                }
+                UpdateRenderablePayload::ScaleX(sx) => {
+                    img.scale.0 = *sx;
+                }
+                UpdateRenderablePayload::ScaleY(sy) => {
+                    img.scale.1 = *sy;
+                }
             }
         }
         _ => {}
