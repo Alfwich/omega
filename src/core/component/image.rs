@@ -18,7 +18,7 @@ pub enum ImageRenderType {
     Linear,
 }
 
-#[derive(Default, Debug)]
+#[derive(Debug)]
 pub struct Image {
     pub name: String,
     pub scale: (f32, f32),
@@ -37,16 +37,32 @@ pub struct Image {
     pub render_type: Option<ImageRenderType>,
 }
 
-impl Image {
-    pub fn new_nameless() -> Self {
-        Self::new("")
-    }
+impl Default for Image {
+    fn default() -> Self {
+        let (name, border, texture, x, y, rotation, width, height, r_rect, render_type) =
+            Default::default();
 
+        Image {
+            name,
+            border,
+            texture,
+            x,
+            y,
+            rotation,
+            width,
+            height,
+            r_rect,
+            render_type,
+            scale: (1., 1.),
+            color: glm::make_vec3(&[1., 1., 1.]),
+        }
+    }
+}
+
+impl Image {
     pub fn new(name: &str) -> Self {
         Image {
             name: name.to_string(),
-            scale: (1., 1.),
-            color: glm::make_vec3(&[1., 1., 1.]),
             ..Default::default()
         }
     }
@@ -57,8 +73,6 @@ impl Image {
             texture: Some(*texture),
             width,
             height,
-            scale: (1., 1.),
-            color: glm::make_vec3(&[1., 1., 1.]),
             ..Default::default()
         }
     }

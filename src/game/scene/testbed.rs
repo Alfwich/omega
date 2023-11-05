@@ -10,7 +10,7 @@ use crate::core::entity::animated_image::{
 use crate::core::entity::entity::{Entity, EntityFns, RenderableEntity};
 use crate::core::event::Event;
 
-use crate::core::resource::AsyncLoadHandle;
+use crate::core::resource::{AsyncLoadHandle, TextLoadInfo};
 use crate::game::entity::button::make_button;
 use crate::util::rect::Rect;
 
@@ -132,9 +132,10 @@ fn handle_event(e: &mut Entity, app: &mut Option<&mut App>, ev: &Event) {
     match ev {
         Event::SFMLEvent(ev) => match ev {
             SFMLEvent::MouseMoved { x, y } => {
+                let data = e.find_component::<Data>("data").unwrap().clone();
                 let card = e.find_component::<Image>("card").unwrap();
-                card.x = *x as f32;
-                card.y = *y as f32;
+                card.x = *x as f32 - data.parent_offset.0;
+                card.y = *y as f32 - data.parent_offset.1;
             }
             SFMLEvent::KeyPressed { code, .. } => match code {
                 &Key::W => {
@@ -171,7 +172,7 @@ fn handle_event(e: &mut Entity, app: &mut Option<&mut App>, ev: &Event) {
                 &Key::U => {
                     if let Some(a) = app {
                         let info = a.resource.load_image_from_disk(DISK_IMAGE_PATH).unwrap();
-                        let mut dynamic_cmp = Image::new_nameless();
+                        let mut dynamic_cmp = Image::default();
                         let mut thread_rng = rand::thread_rng();
                         dynamic_cmp.texture = Some(info);
                         dynamic_cmp.x = thread_rng.gen_range(0f32..1000f32);
@@ -283,6 +284,9 @@ pub fn make_testbed(app: &mut App) -> Entity {
             .load_image_from_disk_async(DISK_IMAGE_PATH)
             .ok();
 
+        // sync load this to ensure corner case with async loading works as expected
+        let _sync_load = app.resource.load_image_from_disk(DISK_IMAGE_PATH);
+
         let mut async_local = Image::new("async_local");
         async_local.x = 1000.;
         async_local.y = 1000.;
@@ -298,8 +302,7 @@ pub fn make_testbed(app: &mut App) -> Entity {
     }
 
     {
-        let text_texture = app.resource.load_text_texture("Omega Ω").unwrap();
-        let mut text = Text::new("title", &text_texture);
+        let mut text = Text::new_with_text("title", app, "Omega Ω");
         text.x = (app.renderer.as_ref().unwrap().viewport.window_size.0 / 2.) as i32;
         text.y = (app.renderer.as_ref().unwrap().viewport.window_size.1 / 2.) as i32;
         e.add_component(text);
@@ -307,11 +310,20 @@ pub fn make_testbed(app: &mut App) -> Entity {
         let d = 3;
         for x in 1..d {
             for y in 1..d {
-                let i_texture = app
-                    .resource
-                    .load_text_texture(&format!("Omega {:?}:{:?}", x, y))
-                    .unwrap();
-                let mut t = Text::new("tester", &i_texture);
+                let text = format!("Omega {:?}:{:?}", x, y).to_string();
+                let text_info = match (x + y) % 2 {
+                    0 => TextLoadInfo {
+                        text,
+                        font_path: "res/font/Bicycle.otf".to_string(),
+                        font_size: 24,
+                    },
+                    _ => TextLoadInfo {
+                        text,
+                        ..Default::default()
+                    },
+                };
+                let mut t = Text::new("tester");
+                t.update_text(app, &text_info);
                 t.x = x * (app.renderer.as_ref().unwrap().viewport.window_size.0 as i32 / d);
                 t.y = y * (app.renderer.as_ref().unwrap().viewport.window_size.1 as i32 / d);
                 e.add_component(t);

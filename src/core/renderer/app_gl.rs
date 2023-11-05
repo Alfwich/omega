@@ -11,6 +11,7 @@ extern crate nalgebra_glm as glm;
 
 use std::convert::TryInto;
 
+use crate::core::resource::TextLoadInfo;
 use crate::util::util::clamp;
 
 pub struct AppGL {
@@ -205,15 +206,15 @@ fn sw_blit_to_buffer(
     }
 }
 
-fn sw_render_text_to_buffer(str: &str, data: &mut TextTextureData) {
-    static FONT_FILE: &str = "res/font/GlacialIndifference-Bold.otf";
+fn sw_render_text_to_buffer(text_info: &TextLoadInfo, data: &mut TextTextureData) {
+    // TODO: This should be externalized
     let lib = freetype::Library::init().unwrap();
-    let face = lib.new_face(FONT_FILE, 0).unwrap();
-    face.set_char_size(80 * 32, 0, 100, 0)
+    let face = lib.new_face(&text_info.font_path, 0).unwrap();
+    face.set_char_size(80 * text_info.font_size, 0, 100, 0)
         .map_err(|err| println!("{:?}", err))
         .ok();
     let mut offset = (0i32, 0i32);
-    for c in str.chars() {
+    for c in text_info.text.chars() {
         face.load_char(c as usize, freetype::face::LoadFlag::RENDER)
             .map_err(|err| println!("{:?}", err))
             .ok();
@@ -259,7 +260,7 @@ fn sw_render_text_to_buffer(str: &str, data: &mut TextTextureData) {
     );
 }
 
-pub fn render_text_to_texture(str: &str) -> Result<Texture, &str> {
+pub fn render_text_to_texture(text_info: &TextLoadInfo) -> Result<Texture, &str> {
     unsafe {
         let mut id: u32 = 0;
         GenTextures(1, &mut id);
@@ -288,7 +289,7 @@ pub fn render_text_to_texture(str: &str) -> Result<Texture, &str> {
         PixelStorei(UNPACK_ALIGNMENT, 1);
 
         let mut texture_data = TextTextureData::default();
-        sw_render_text_to_buffer(str, &mut texture_data);
+        sw_render_text_to_buffer(text_info, &mut texture_data);
         let texture_data_ptr = texture_data.data.as_ptr() as *const c_void;
         TexImage2D(
             TEXTURE_2D,

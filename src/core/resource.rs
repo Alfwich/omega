@@ -2,10 +2,9 @@ use crate::core::renderer::app_gl::*;
 use sfml::{audio::SoundBuffer, window::Context, SfBox};
 use std::sync::mpsc::{Receiver, Sender};
 use std::thread::{self, JoinHandle};
-use std::{
-    cell::RefCell,
-    collections::{HashMap, HashSet},
-};
+use std::{cell::RefCell, collections::HashMap};
+
+use super::renderer::app_gl;
 
 #[derive(Default, Clone)]
 pub enum ImageLoadPayloadType {
@@ -34,11 +33,27 @@ pub enum AsyncLoadError {
     FailedToCommunicateWithResourceThread,
 }
 
+pub struct TextLoadInfo {
+    pub text: String,
+    pub font_path: String,
+    pub font_size: isize,
+}
+
+impl Default for TextLoadInfo {
+    fn default() -> Self {
+        Self {
+            text: "".to_string(),
+            font_path: "res/font/GlacialIndifference-Bold.otf".to_string(),
+            font_size: 36,
+        }
+    }
+}
+
 pub struct Resources {
     pub audio_data: HashMap<String, RefCell<SfBox<SoundBuffer>>>,
     pub texture_data: HashMap<String, Texture>,
     pub text_data: HashMap<String, Texture>,
-    remote_image_loading: HashSet<String>,
+    remote_image_loading: HashMap<String, u32>,
     remote_image_work_tx: Sender<ImageLoadPayload>,
     remote_image_rx: Receiver<ImageLoadPayload>,
     base_handle: AsyncLoadHandle,
@@ -121,7 +136,7 @@ impl Default for Resources {
             audio_data: HashMap::new(),
             texture_data: HashMap::new(),
             text_data: HashMap::new(),
-            remote_image_loading: HashSet::new(),
+            remote_image_loading: HashMap::new(),
             remote_image_work_tx: in_tx,
             remote_image_rx: out_rx,
             base_handle: AsyncLoadHandle::default(),
@@ -136,16 +151,37 @@ impl Resources {
     pub fn recv_load_events(&mut self) -> Option<(String, ImageLoadPayload)> {
         match self.remote_image_rx.try_recv() {
             Ok(payload) => {
-                self.texture_data.insert(
-                    payload.path.clone(),
-                    Texture {
-                        texture_id: payload.texture_id,
-                        width: payload.width,
-                        height: payload.height,
-                    },
-                );
-                self.remote_image_loading.remove(&payload.path.clone());
-                return Some((payload.path.clone(), payload.clone()));
+                let payload_key = payload.path.clone();
+                // Special case where the texture gets loaded sync before an async request resolves
+                if self.texture_data.contains_key(&payload_key) {
+                    if payload.texture_id != 0
+                        && payload.texture_id != self.texture_data[&payload_key].texture_id
+                    {
+                        app_gl::release_texture(payload.texture_id);
+                    }
+                    return Some((
+                        payload_key,
+                        ImageLoadPayload {
+                            handle: payload.handle,
+                            image_type: payload.image_type,
+                            path: payload.path.clone(),
+                            texture_id: self.texture_data[&payload.path.clone()].texture_id,
+                            width: self.texture_data[&payload.path.clone()].width,
+                            height: self.texture_data[&payload.path.clone()].height,
+                        },
+                    ));
+                } else {
+                    self.texture_data.insert(
+                        payload.path.clone(),
+                        Texture {
+                            texture_id: payload.texture_id,
+                            width: payload.width,
+                            height: payload.height,
+                        },
+                    );
+                    self.remote_image_loading.remove(&payload.path.clone());
+                    return Some((payload.path.clone(), payload.clone()));
+                }
             }
             _ => {}
         }
@@ -184,16 +220,23 @@ impl Resources {
             .texture_data
             .get(image_path)
             .unwrap_or(&Texture::default());
-        let image_is_loading = self.remote_image_loading.contains(&image_path.to_string());
-        if texture_data.texture_id != 0 || image_is_loading {
+        let image_is_loading = self
+            .remote_image_loading
+            .contains_key(&image_path.to_string());
+        if texture_data.texture_id != 0 {
             return Err(AsyncLoadError::ResourceAlreadyExists(
                 texture_data.texture_id,
             ));
+        } else if image_is_loading {
+            return Ok(AsyncLoadHandle {
+                id: self.remote_image_loading[image_path],
+            });
         };
 
         self.base_handle.id += 1;
 
-        self.remote_image_loading.insert(image_path.to_string());
+        self.remote_image_loading
+            .insert(image_path.to_string(), self.base_handle.id);
         match self.remote_image_work_tx.send(ImageLoadPayload {
             handle: self.base_handle,
             image_type: ImageLoadPayloadType::Disk,
@@ -218,15 +261,22 @@ impl Resources {
             .texture_data
             .get(image_url)
             .unwrap_or(&Texture::default());
-        let remote_image_is_loading = self.remote_image_loading.contains(&image_url.to_string());
-        if texture_info.texture_id != 0 || remote_image_is_loading {
+        let remote_image_is_loading = self
+            .remote_image_loading
+            .contains_key(&image_url.to_string());
+        if texture_info.texture_id != 0 {
             return Err(AsyncLoadError::ResourceAlreadyExists(
                 texture_info.texture_id,
             ));
-        };
+        } else if remote_image_is_loading {
+            return Ok(AsyncLoadHandle {
+                id: self.remote_image_loading[image_url],
+            });
+        }
 
         self.base_handle.id += 1;
-        self.remote_image_loading.insert(image_url.to_string());
+        self.remote_image_loading
+            .insert(image_url.to_string(), self.base_handle.id);
         match self.remote_image_work_tx.send(ImageLoadPayload {
             handle: self.base_handle,
             image_type: ImageLoadPayloadType::Remote,
@@ -243,12 +293,13 @@ impl Resources {
         }
     }
 
-    pub fn load_text_texture(&mut self, text: &str) -> Result<Texture, String> {
-        if let Some(id) = self.text_data.get(&text.to_string()) {
+    pub fn load_text_texture(&mut self, text_load_info: &TextLoadInfo) -> Result<Texture, String> {
+        let key = text_load_info.text.clone();
+        if let Some(id) = self.text_data.get(&key) {
             Ok(*id)
         } else {
-            let text_result = render_text_to_texture(text)?;
-            self.text_data.insert(text.to_string(), text_result);
+            let text_result = render_text_to_texture(text_load_info)?;
+            self.text_data.insert(key, text_result);
             Ok(text_result)
         }
     }
