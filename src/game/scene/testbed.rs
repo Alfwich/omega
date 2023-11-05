@@ -26,6 +26,8 @@ struct Data {
     left_down: bool,
     right_down: bool,
     parent_offset: (f32, f32),
+
+    sync_loaded_texture_id: u32,
     async_local_handle: Option<AsyncLoadHandle>,
     async_remote_handle: Option<AsyncLoadHandle>,
     async_quad_handle: Option<AsyncLoadHandle>,
@@ -132,10 +134,10 @@ fn handle_event(e: &mut Entity, app: &mut Option<&mut App>, ev: &Event) {
     match ev {
         Event::SFMLEvent(ev) => match ev {
             SFMLEvent::MouseMoved { x, y } => {
-                let data = e.find_component::<Data>("data").unwrap().clone();
+                let offset = e.find_component::<Data>("data").unwrap().parent_offset;
                 let card = e.find_component::<Image>("card").unwrap();
-                card.x = *x as f32 - data.parent_offset.0;
-                card.y = *y as f32 - data.parent_offset.1;
+                card.x = *x as f32 - offset.0;
+                card.y = *y as f32 - offset.1;
             }
             SFMLEvent::KeyPressed { code, .. } => match code {
                 &Key::W => {
@@ -227,6 +229,10 @@ fn handle_event(e: &mut Entity, app: &mut Option<&mut App>, ev: &Event) {
 
             if let Some(async_handle) = data.async_local_handle {
                 if async_handle.id == handle_id {
+                    assert!(
+                        img_data.texture_id == data.sync_loaded_texture_id,
+                        "Expect async to return sync'd loaded texture"
+                    );
                     let async_local = e.find_component::<Image>("async_local").unwrap();
                     async_local.apply_image(img_data)
                 }
@@ -284,8 +290,19 @@ pub fn make_testbed(app: &mut App) -> Entity {
             .load_image_from_disk_async(DISK_IMAGE_PATH)
             .ok();
 
-        // sync load this to ensure corner case with async loading works as expected
-        let _sync_load = app.resource.load_image_from_disk(DISK_IMAGE_PATH);
+        // sync load this to ensure corner case with async loading works as expected. The will immediatly
+        // load DISK_IMAGE_PATH and upload this to the GPU. Once the async call gets resolved it should return
+        // the same resource as this sync load and prevent leaking memory.
+        let sync_load = app.resource.load_image_from_disk(DISK_IMAGE_PATH);
+        let sync_load_2 = app.resource.load_image_from_disk(DISK_IMAGE_PATH);
+
+        // This will be checked once we finish the async action
+        data.sync_loaded_texture_id = sync_load.unwrap().texture_id;
+
+        assert!(
+            data.sync_loaded_texture_id == sync_load_2.unwrap().texture_id,
+            "Expected that two sync loaded textures result in the same texture"
+        );
 
         let mut async_local = Image::new("async_local");
         async_local.x = 1000.;
