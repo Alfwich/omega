@@ -133,6 +133,9 @@ fn update_testbed(e: &mut Entity, _app: &App, dt: f32) {
 fn handle_event(e: &mut Entity, app: &mut Option<&mut App>, ev: &Event) {
     match ev {
         Event::SFMLEvent(ev) => match ev {
+            SFMLEvent::Closed => {
+                app.as_mut().unwrap().close_window();
+            }
             SFMLEvent::MouseMoved { x, y } => {
                 let offset = e.find_component::<Data>("data").unwrap().parent_offset;
                 let card = e.find_component::<Image>("card").unwrap();
@@ -186,6 +189,9 @@ fn handle_event(e: &mut Entity, app: &mut Option<&mut App>, ev: &Event) {
                         dynamic_cmp.color.z = thread_rng.gen_range(0f32..1f32);
                         e.add_component(dynamic_cmp);
                     }
+                }
+                &Key::Q => {
+                    app.as_mut().unwrap().close_window();
                 }
                 _ => {}
             },
