@@ -5,14 +5,14 @@ use crate::core::component::image::Image;
 use crate::core::component::offset::{Offset, OFFSET_NAME};
 use crate::core::component::text::Text;
 use crate::core::entity::animated_image::{
-    animated_image_add_animation, animated_image_set_animation, make_animated_image,
+    animated_image_add_animation, animated_image_get_position, animated_image_set_animation,
+    make_animated_image,
 };
 use crate::core::entity::entity::{Entity, EntityFns, RenderableEntity};
 use crate::core::event::Event;
 
 use crate::core::resource::{AsyncLoadHandle, TextLoadInfo};
 use crate::game::entity::button::make_button;
-use crate::util::rect::Rect;
 
 use rand::Rng;
 use sfml::window::{Event as SFMLEvent, Key};
@@ -30,7 +30,6 @@ struct Data {
     sync_loaded_texture_id: u32,
     async_local_handle: Option<AsyncLoadHandle>,
     async_remote_handle: Option<AsyncLoadHandle>,
-    async_quad_handle: Option<AsyncLoadHandle>,
 }
 
 impl Component for Data {
@@ -48,7 +47,9 @@ static DISK_IMAGE_PATH: &str = "res/img/motorcycle.png";
 static DISK_IMAGE_QUAD: &str = "res/img/test-clip.png";
 static DISK_IMAGE_MARIO: &str = "res/img/mario.png";
 
-fn update_testbed(e: &mut Entity, _app: &App, dt: f32) {
+fn update_testbed(e: &mut Entity, app: &App, dt: f32) {
+    println!("fps: {}", 1. / dt);
+
     let d;
     {
         let data = e.find_component::<Data>("data").unwrap();
@@ -84,48 +85,21 @@ fn update_testbed(e: &mut Entity, _app: &App, dt: f32) {
         offset.y = d.counter.sin() * 50. * PI * 2.;
     }
     {
-        let test_quad = e.find_component::<Image>("test-quad").unwrap();
-        let idx = (d.counter as u32) % 4;
-        let new_rect = match idx {
-            0 => Rect {
-                x: 0.,
-                y: 0.,
-                w: 256.,
-                h: 256.,
-            },
-            1 => Rect {
-                x: 256.,
-                y: 0.,
-                w: 256.,
-                h: 256.,
-            },
-            2 => Rect {
-                x: 0.,
-                y: 256.,
-                w: 256.,
-                h: 256.,
-            },
-            3 => Rect {
-                x: 256.,
-                y: 256.,
-                w: 256.,
-                h: 256.,
-            },
-            _ => Rect::default(),
-        };
-        test_quad.r_rect = Some(new_rect);
-    }
-    {
-        // HACK: Move this to a game entity since we should not be accessing the 'ai-texture'
-        let animated_image = e.find_child_by_name("test-animated").unwrap();
+        let mario = e.find_child_by_name("test-animated").unwrap();
         match (d.left_down, d.right_down) {
             (true, false) => {
-                animated_image.move_x(-100. * dt);
+                mario.move_x(-100. * dt);
             }
             (false, true) => {
-                animated_image.move_x(100. * dt);
+                mario.move_x(100. * dt);
             }
             _ => {}
+        }
+        let mario_location = animated_image_get_position(mario);
+        if mario_location.1 < app.renderer.as_ref().unwrap().viewport.window_size.1 / 2. {
+            mario.zindex = -1;
+        } else {
+            mario.zindex = 1;
         }
     }
 }
@@ -243,13 +217,6 @@ fn handle_event(e: &mut Entity, app: &mut Option<&mut App>, ev: &Event) {
                     async_local.apply_image(img_data)
                 }
             }
-
-            if let Some(async_handle) = data.async_quad_handle {
-                if async_handle.id == handle_id {
-                    let quad_cmp = e.find_component::<Image>("test-quad").unwrap();
-                    quad_cmp.apply_image(img_data)
-                }
-            }
         }
         _ => {}
     }
@@ -285,6 +252,7 @@ pub fn make_testbed(app: &mut App) -> Entity {
             texture_info.width as f32,
             texture_info.height as f32,
         );
+        image.zindex = -5;
         image.x = app.renderer.as_ref().unwrap().viewport.window_size.0 / 2.;
         image.y = app.renderer.as_ref().unwrap().viewport.window_size.1 / 2.;
         e.add_component(image);
@@ -322,6 +290,22 @@ pub fn make_testbed(app: &mut App) -> Entity {
             .load_image_from_url_async(REMOTE_IMAGE_URL)
             .ok();
         e.add_component(Image::new("card"));
+    }
+
+    {
+        let mut image = make_animated_image(
+            app,
+            "test-quad",
+            DISK_IMAGE_QUAD,
+            256.,
+            256.,
+            Some(1.),
+            Some(crate::core::component::image::ImageRenderType::Linear),
+        );
+
+        image.set_x(app.renderer.as_ref().unwrap().viewport.window_size.0 / 2.);
+        image.set_y(app.renderer.as_ref().unwrap().viewport.window_size.1 / 2.);
+        e.add_child(image);
     }
 
     {
@@ -364,25 +348,6 @@ pub fn make_testbed(app: &mut App) -> Entity {
         let mut button = make_button(app);
         button.name = "test_button".to_string();
         e.add_child(button);
-    }
-
-    {
-        data.async_quad_handle = app
-            .resource
-            .load_image_from_disk_async(DISK_IMAGE_QUAD)
-            .ok();
-
-        let mut image = Image::new("test-quad");
-        image.x = app.renderer.as_ref().unwrap().viewport.window_size.0 / 2.;
-        image.y = app.renderer.as_ref().unwrap().viewport.window_size.1 / 2.;
-        image.r_rect = Some(Rect {
-            x: 256.,
-            y: 256.,
-            w: 256.,
-            h: 256.,
-        });
-        image.render_type = Some(crate::core::component::image::ImageRenderType::Linear);
-        e.add_component(image);
     }
 
     {

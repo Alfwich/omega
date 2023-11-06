@@ -9,6 +9,8 @@ use crate::util::rect::Rect;
 use core::any::Any;
 use std::collections::HashMap;
 
+static ANIMATED_IMAGE_TEXTURE_NAME: &str = "__AI_TEXTURE__";
+
 #[derive(Default, Debug, Clone)]
 struct Data {
     timer: u64,
@@ -44,7 +46,9 @@ fn update_animated_image(e: &mut Entity, _app: &App, dt: f32) {
     }
 
     {
-        let img = e.find_component::<Image>("ai-texture").unwrap();
+        let img = e
+            .find_component::<Image>(ANIMATED_IMAGE_TEXTURE_NAME)
+            .unwrap();
         img.r_rect = Some(data.frames[data.frame].clone());
     }
 }
@@ -52,7 +56,9 @@ fn update_animated_image(e: &mut Entity, _app: &App, dt: f32) {
 fn handle_event(e: &mut Entity, _app: &mut Option<&mut App>, ev: &Event) {
     match ev {
         Event::UpdateRenderable(p) => {
-            let img = e.find_component::<Image>("ai-texture").unwrap();
+            let img = e
+                .find_component::<Image>(ANIMATED_IMAGE_TEXTURE_NAME)
+                .unwrap();
 
             match p {
                 UpdateRenderablePayload::X(x) => {
@@ -100,6 +106,14 @@ pub fn animated_image_add_animation(e: &mut Entity, name: &str, frame_range: (us
     d.animations.insert(name.to_string(), frame_range);
 }
 
+pub fn animated_image_get_position(e: &mut Entity) -> (f32, f32) {
+    let img = e
+        .find_component::<Image>(ANIMATED_IMAGE_TEXTURE_NAME)
+        .unwrap();
+
+    (img.x, img.y)
+}
+
 pub fn make_animated_image(
     app: &mut App,
     name: &str,
@@ -128,8 +142,8 @@ pub fn make_animated_image(
 
     {
         let mut d = Data::default();
-        while (y_pos + height as u32) < texture_info.height {
-            while (x_pos + width as u32) < texture_info.width {
+        while (y_pos + height as u32) <= texture_info.height {
+            while (x_pos + width as u32) <= texture_info.width {
                 d.frames.push(Rect {
                     x: x_pos as f32,
                     y: y_pos as f32,
@@ -153,7 +167,8 @@ pub fn make_animated_image(
     }
 
     {
-        let mut img = Image::with_texture("ai-texture", &texture_info, width, height);
+        let mut img =
+            Image::with_texture(ANIMATED_IMAGE_TEXTURE_NAME, &texture_info, width, height);
         img.r_rect = Some(Rect {
             x: 0.,
             y: 0.,

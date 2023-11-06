@@ -24,11 +24,17 @@ impl Default for EntityFns {
     }
 }
 
+/// Entities are composed of a combination of Components, and other Entities.
+enum EntityChild {
+    Component(Box<dyn Component>),
+    Entity(Entity),
+}
+
 #[derive(Default)]
 pub struct Entity {
     pub name: String,
-    components: Vec<Box<dyn Component>>,
-    children: Vec<Entity>,
+    pub zindex: i32,
+    children: Vec<EntityChild>,
     vtable: EntityFns,
 }
 
@@ -36,18 +42,18 @@ impl Entity {
     pub fn new(name: &str, vtable: EntityFns) -> Self {
         Entity {
             name: name.to_string(),
-            components: Vec::default(),
             children: Vec::default(),
+            zindex: 0,
             vtable,
         }
     }
 
     pub fn add_component<T: Component + 'static>(&mut self, cmp: T) {
-        self.components.push(Box::new(cmp));
+        self.children.push(EntityChild::Component(Box::new(cmp)));
     }
 
     pub fn add_child(&mut self, ent: Entity) {
-        self.children.push(ent);
+        self.children.push(EntityChild::Entity(ent));
     }
 
     pub fn find_component<T: Component + 'static>(&mut self, name: &str) -> Result<&mut T, String> {
@@ -61,10 +67,15 @@ impl Entity {
         &mut self,
         name: &str,
     ) -> Result<&mut Box<dyn Component>, String> {
-        for cmp in &mut self.components {
-            let component = &*cmp;
-            if component.get_name() == name {
-                return Ok(cmp);
+        for c in &mut self.children {
+            match c {
+                EntityChild::Component(cmp) => {
+                    let component = &*cmp;
+                    if component.get_name() == name {
+                        return Ok(cmp);
+                    }
+                }
+                _ => {}
             }
         }
 
@@ -72,9 +83,14 @@ impl Entity {
     }
 
     pub fn find_child_by_name(&mut self, name: &str) -> Result<&mut Entity, String> {
-        for child in &mut self.children {
-            if child.name == name {
-                return Ok(child);
+        for c in &mut self.children {
+            match c {
+                EntityChild::Entity(ent) => {
+                    if ent.name == name {
+                        return Ok(ent);
+                    }
+                }
+                _ => {}
             }
         }
 
@@ -84,17 +100,57 @@ impl Entity {
     pub fn handle_event(&mut self, a: &mut Option<&mut App>, e: &Event) {
         (self.vtable.event_fn)(self, a, e);
 
-        for ent in &mut self.children {
-            ent.handle_event(a, e);
+        for c in &mut self.children {
+            match c {
+                EntityChild::Entity(ent) => {
+                    ent.handle_event(a, e);
+                }
+                _ => {}
+            }
+        }
+    }
+
+    /// Reorder children based on z_index value
+    pub fn reorder_children(&mut self) {
+        self.children.sort_by(|a, b| {
+            let av = match a {
+                EntityChild::Entity(ent) => ent.z_index(),
+                EntityChild::Component(cmp) => cmp.z_index(),
+            };
+
+            let bv = match b {
+                EntityChild::Entity(ent) => ent.z_index(),
+                EntityChild::Component(cmp) => cmp.z_index(),
+            };
+
+            av.partial_cmp(&bv).unwrap()
+        });
+
+        for c in &mut self.children {
+            match c {
+                EntityChild::Entity(ent) => {
+                    ent.reorder_children();
+                }
+                _ => {}
+            }
         }
     }
 
     pub fn update(&mut self, app: &App, dt: f32) {
         (self.vtable.update_fn)(self, app, dt);
 
-        for ent in &mut self.children {
-            ent.update(app, dt);
+        for c in &mut self.children {
+            match c {
+                EntityChild::Entity(ent) => {
+                    ent.update(app, dt);
+                }
+                _ => {}
+            }
         }
+    }
+
+    fn z_index(&self) -> i32 {
+        self.zindex
     }
 
     pub fn render_components(&mut self, app: &App, parent_offset: (f32, f32)) {
@@ -105,12 +161,16 @@ impl Entity {
 
         (self.vtable.prerender_fn)(self, offset);
 
-        for cmp in &self.components {
-            cmp.render(app, offset);
-        }
+        for c in &mut self.children {
+            match c {
+                EntityChild::Entity(ent) => {
+                    ent.render_components(app, offset);
+                }
 
-        for ent in &mut self.children {
-            ent.render_components(app, offset);
+                EntityChild::Component(cmp) => {
+                    cmp.render(app, offset);
+                }
+            }
         }
     }
 }

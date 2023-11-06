@@ -22,6 +22,7 @@ pub enum ImageRenderType {
 pub struct Image {
     pub name: String,
     pub scale: (f32, f32),
+    pub zindex: i32,
     pub border: f32,
     pub texture: Option<Texture>,
     pub x: f32,
@@ -39,11 +40,12 @@ pub struct Image {
 
 impl Default for Image {
     fn default() -> Self {
-        let (name, border, texture, x, y, rotation, width, height, r_rect, render_type) =
+        let (zindex, name, border, texture, x, y, rotation, width, height, r_rect, render_type) =
             Default::default();
 
         Image {
             name,
+            zindex,
             border,
             texture,
             x,
@@ -94,6 +96,10 @@ impl Image {
 impl Component for Image {
     fn get_name(&self) -> &str {
         &self.name
+    }
+
+    fn z_index(&self) -> i32 {
+        self.zindex
     }
 
     fn render(&self, app: &App, parent_offset: (f32, f32)) {

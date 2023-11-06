@@ -12,6 +12,7 @@ use core::any::Any;
 #[derive(Default, Debug)]
 pub struct Text {
     pub name: String,
+    pub zindex: i32,
     pub text: String,
     pub texture_id: Option<u32>,
     pub x: i32,
@@ -53,6 +54,10 @@ impl Text {
 impl Component for Text {
     fn get_name(&self) -> &str {
         &self.name
+    }
+
+    fn z_index(&self) -> i32 {
+        self.zindex
     }
 
     fn render(&self, app: &App, parent_offset: (f32, f32)) {
