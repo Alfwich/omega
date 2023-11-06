@@ -6,6 +6,8 @@ use crate::core::event::{Event, UpdateRenderablePayload};
 
 use crate::util::rect::Rect;
 
+extern crate nalgebra_glm as glm;
+
 use core::any::Any;
 use std::collections::HashMap;
 
@@ -87,6 +89,9 @@ fn handle_event(e: &mut Entity, _app: &mut Option<&mut App>, ev: &Event) {
                 }
                 UpdateRenderablePayload::ScaleY(sy) => {
                     img.scale.1 = *sy;
+                }
+                UpdateRenderablePayload::ColorMod(r, g, b) => {
+                    img.color = glm::make_vec3(&[*r, *g, *b]);
                 }
             }
         }

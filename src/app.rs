@@ -1,8 +1,9 @@
+use sfml::system::Vector2;
 use sfml::window::Window;
 
 use crate::core::component::pre_frame::PreFrame;
 use crate::core::entity::entity::Entity;
-use crate::core::event::Event::{ImageLoadEvent, SFMLEvent};
+use crate::core::event::Event::{self, ImageLoadEvent, SFMLEvent};
 use crate::core::event::ImageLoadEventPayload;
 use crate::core::renderer::renderer::Renderer;
 use crate::core::renderer::window::{make_window, WindowConfig, WindowStyle};
@@ -14,6 +15,8 @@ use crate::util::timer::Timer;
 #[derive(Default)]
 pub struct App {
     window: Option<Window>,
+    window_config: WindowConfig,
+    app_events: Vec<Event>,
     pub state: GameState,
     pub resource: Resources,
     pub renderer: Option<Renderer>,
@@ -26,44 +29,84 @@ impl App {
         }
     }
 
+    pub fn update_window_config(&mut self, config: &WindowConfig) {
+        if self.window.is_some() {
+            let size = Vector2::new(config.width, config.height);
+            self.window.as_mut().unwrap().set_size(size);
+            self.window
+                .as_mut()
+                .unwrap()
+                .set_framerate_limit(config.fps_limit);
+            self.window
+                .as_mut()
+                .unwrap()
+                .set_vertical_sync_enabled(config.vsync_enabled);
+            self.renderer
+                .as_mut()
+                .unwrap()
+                .update_size(config.width as f32, config.height as f32);
+
+            self.app_events.push(Event::WindowUpdated(*config));
+        }
+    }
+
+    pub fn get_window_config(&self) -> WindowConfig {
+        self.window_config
+    }
+
     fn handle_window_events(&mut self, root: &mut Entity) {
+        // Handle any queued up application events first
+        {
+            let mut app_events = Vec::new();
+            for e in &self.app_events {
+                app_events.push(*e);
+            }
+
+            for e in app_events {
+                root.handle_event(&mut Some(self), &e);
+            }
+        }
+
+        // Handle async events
+        {
+            let mut image_load_events = Vec::new();
+            loop {
+                if let Some(image_load_result) = self.resource.recv_load_events() {
+                    let load_info = image_load_result.1;
+                    image_load_events.push(ImageLoadEvent(ImageLoadEventPayload {
+                        handle: load_info.handle,
+                        texture_id: load_info.texture_id,
+                        width: load_info.width,
+                        height: load_info.height,
+                    }));
+                } else {
+                    break;
+                }
+            }
+
+            for e in image_load_events.iter() {
+                root.handle_event(&mut Some(self), e)
+            }
+        }
+
+        // Lastly, handle SFML window events
         if self.window.is_some() {
             while let Some(event) = self.window.as_mut().unwrap().poll_event() {
                 root.handle_event(&mut Some(self), &SFMLEvent(event));
             }
         }
-
-        let mut image_load_events = Vec::new();
-        loop {
-            if let Some(image_load_result) = self.resource.recv_load_events() {
-                let load_info = image_load_result.1;
-                image_load_events.push(ImageLoadEvent(ImageLoadEventPayload {
-                    handle: load_info.handle,
-                    texture_id: load_info.texture_id,
-                    width: load_info.width,
-                    height: load_info.height,
-                }));
-            } else {
-                break;
-            }
-        }
-
-        for e in image_load_events.iter() {
-            root.handle_event(&mut Some(self), e)
-        }
     }
 
     pub fn run(&mut self) {
-        let mut window_config = WindowConfig::default();
-        window_config.width = 1920;
-        window_config.height = 1080;
-        window_config.style = WindowStyle::Windowed;
-        window_config.vsync_enabled = false;
-        self.window = Some(*make_window(&window_config));
+        self.window_config.width = 1920;
+        self.window_config.height = 1080;
+        self.window_config.style = WindowStyle::Windowed;
+        self.window_config.vsync_enabled = false;
+        self.window = Some(*make_window(&self.window_config));
 
         self.renderer = Some(Renderer::new(
-            window_config.width as f32,
-            window_config.height as f32,
+            self.window_config.width as f32,
+            self.window_config.height as f32,
         ));
         let mut frame_timer = Timer::default();
 

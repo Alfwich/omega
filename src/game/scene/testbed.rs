@@ -48,7 +48,7 @@ static DISK_IMAGE_QUAD: &str = "res/img/test-clip.png";
 static DISK_IMAGE_MARIO: &str = "res/img/mario.png";
 
 fn update_testbed(e: &mut Entity, app: &App, dt: f32) {
-    println!("fps: {}", 1. / dt);
+    //println!("fps: {}", 1. / dt);
 
     let d;
     {
@@ -81,25 +81,27 @@ fn update_testbed(e: &mut Entity, app: &App, dt: f32) {
 
     {
         let offset = e.find_component::<Offset>(OFFSET_NAME).unwrap();
-        offset.x = d.counter.cos() * 50. * PI * 2.;
-        offset.y = d.counter.sin() * 50. * PI * 2.;
+        offset.x = d.counter.cos() * 10. * PI * 2.;
+        offset.y = d.counter.sin() * 10. * PI * 2.;
     }
     {
         let mario = e.find_child_by_name("test-animated").unwrap();
-        match (d.left_down, d.right_down) {
-            (true, false) => {
-                mario.move_x(-100. * dt);
+        if mario.active {
+            match (d.left_down, d.right_down) {
+                (true, false) => {
+                    mario.move_x(-100. * dt);
+                }
+                (false, true) => {
+                    mario.move_x(100. * dt);
+                }
+                _ => {}
             }
-            (false, true) => {
-                mario.move_x(100. * dt);
+            let mario_location = animated_image_get_position(mario);
+            if mario_location.1 < app.renderer.as_ref().unwrap().viewport.window_size.1 / 2. {
+                mario.zindex = -1;
+            } else {
+                mario.zindex = 1;
             }
-            _ => {}
-        }
-        let mario_location = animated_image_get_position(mario);
-        if mario_location.1 < app.renderer.as_ref().unwrap().viewport.window_size.1 / 2. {
-            mario.zindex = -1;
-        } else {
-            mario.zindex = 1;
         }
     }
 }
@@ -119,13 +121,17 @@ fn handle_event(e: &mut Entity, app: &mut Option<&mut App>, ev: &Event) {
             SFMLEvent::KeyPressed { code, .. } => match code {
                 &Key::W => {
                     let animated_image = e.find_child_by_name("test-animated").unwrap();
-                    animated_image.move_y(-10.);
+                    if animated_image.active {
+                        animated_image.move_y(-10.);
+                    }
                 }
                 &Key::A => {
                     {
                         let animated_image = e.find_child_by_name("test-animated").unwrap();
-                        animated_image_set_animation(animated_image, "walking");
-                        animated_image.set_scale_x(-3.);
+                        if animated_image.active {
+                            animated_image_set_animation(animated_image, "walking");
+                            animated_image.set_scale_x(-3.);
+                        }
                     }
                     {
                         let data = e.find_component::<Data>("data").unwrap();
@@ -134,14 +140,18 @@ fn handle_event(e: &mut Entity, app: &mut Option<&mut App>, ev: &Event) {
                 }
                 &Key::S => {
                     let animated_image = e.find_child_by_name("test-animated").unwrap();
-                    animated_image_set_animation(animated_image, "swim");
-                    animated_image.move_y(10.);
+                    if animated_image.active {
+                        animated_image_set_animation(animated_image, "swim");
+                        animated_image.move_y(10.);
+                    }
                 }
                 &Key::D => {
                     {
                         let animated_image = e.find_child_by_name("test-animated").unwrap();
-                        animated_image_set_animation(animated_image, "walking");
-                        animated_image.set_scale_x(3.);
+                        if animated_image.active {
+                            animated_image_set_animation(animated_image, "walking");
+                            animated_image.set_scale_x(3.);
+                        }
                     }
                     {
                         let data = e.find_component::<Data>("data").unwrap();
@@ -167,13 +177,51 @@ fn handle_event(e: &mut Entity, app: &mut Option<&mut App>, ev: &Event) {
                 &Key::Q => {
                     app.as_mut().unwrap().close_window();
                 }
+
+                &Key::LBracket => {
+                    let animated_image = e.find_child_by_name("test-animated").unwrap();
+                    animated_image.active = false;
+                    animated_image.set_color_mod(0.5, 0.5, 0.5);
+                }
+
+                &Key::RBracket => {
+                    let animated_image = e.find_child_by_name("test-animated").unwrap();
+                    animated_image.active = true;
+                    animated_image.set_color_mod(1., 1., 1.);
+                }
+
+                &Key::Num9 => {
+                    let animated_image = e.find_child_by_name("test-animated").unwrap();
+                    animated_image.visible = false;
+                }
+
+                &Key::Num0 => {
+                    let animated_image = e.find_child_by_name("test-animated").unwrap();
+                    animated_image.visible = true;
+                }
+
+                &Key::Num7 => {
+                    let mut config = app.as_ref().unwrap().get_window_config();
+                    config.width = 1280;
+                    config.height = 720;
+                    app.as_mut().unwrap().update_window_config(&config);
+                }
+
+                &Key::Num8 => {
+                    let mut config = app.as_ref().unwrap().get_window_config();
+                    config.width = 1920;
+                    config.height = 1080;
+                    app.as_mut().unwrap().update_window_config(&config);
+                }
                 _ => {}
             },
             SFMLEvent::KeyReleased { code, .. } => match code {
                 &Key::A => {
                     {
                         let animated_image = e.find_child_by_name("test-animated").unwrap();
-                        animated_image_set_animation(animated_image, "idle");
+                        if animated_image.active {
+                            animated_image_set_animation(animated_image, "idle");
+                        }
                     }
 
                     {
@@ -184,7 +232,9 @@ fn handle_event(e: &mut Entity, app: &mut Option<&mut App>, ev: &Event) {
                 &Key::D => {
                     {
                         let animated_image = e.find_child_by_name("test-animated").unwrap();
-                        animated_image_set_animation(animated_image, "idle");
+                        if animated_image.active {
+                            animated_image_set_animation(animated_image, "idle");
+                        }
                     }
 
                     {
@@ -217,6 +267,11 @@ fn handle_event(e: &mut Entity, app: &mut Option<&mut App>, ev: &Event) {
                     async_local.apply_image(img_data)
                 }
             }
+        }
+        Event::WindowUpdated(config) => {
+            let quad = e.find_child_by_name("test-quad").unwrap();
+            quad.set_x((config.width / 2) as f32);
+            quad.set_y((config.height / 2) as f32);
         }
         _ => {}
     }

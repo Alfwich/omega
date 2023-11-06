@@ -36,6 +36,11 @@ impl Renderer {
         }
     }
 
+    pub fn update_size(&mut self, width: f32, height: f32) {
+        self.ortho = glm::ortho(0.0f32, width, 0., height, -10., 100.);
+        self.viewport = Viewport::new(width, height);
+    }
+
     pub fn make_mvp(
         &self,
         x: f32,

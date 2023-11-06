@@ -20,7 +20,7 @@ pub fn make_window(config: &WindowConfig) -> Box<Window> {
 }
 
 #[allow(dead_code)]
-#[derive(Default)]
+#[derive(Debug, Default, Clone, Copy)]
 pub enum WindowStyle {
     Windowed,
     Fullscreen,
@@ -28,7 +28,7 @@ pub enum WindowStyle {
     FullscreenBorderless,
 }
 
-#[derive(Default)]
+#[derive(Debug, Default, Clone, Copy)]
 pub struct WindowConfig {
     pub(crate) width: u32,
     pub(crate) height: u32,

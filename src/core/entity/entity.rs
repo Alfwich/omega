@@ -30,20 +30,36 @@ enum EntityChild {
     Entity(Entity),
 }
 
-#[derive(Default)]
 pub struct Entity {
     pub name: String,
     pub zindex: i32,
+    pub active: bool,
+    pub visible: bool,
     children: Vec<EntityChild>,
     vtable: EntityFns,
+}
+
+impl Default for Entity {
+    fn default() -> Self {
+        Self {
+            name: "".to_string(),
+            zindex: 0,
+            active: true,
+            visible: true,
+            children: Vec::default(),
+            vtable: EntityFns::default(),
+        }
+    }
 }
 
 impl Entity {
     pub fn new(name: &str, vtable: EntityFns) -> Self {
         Entity {
             name: name.to_string(),
-            children: Vec::default(),
             zindex: 0,
+            active: true,
+            visible: true,
+            children: Vec::default(),
             vtable,
         }
     }
@@ -98,14 +114,16 @@ impl Entity {
     }
 
     pub fn handle_event(&mut self, a: &mut Option<&mut App>, e: &Event) {
-        (self.vtable.event_fn)(self, a, e);
+        if self.active {
+            (self.vtable.event_fn)(self, a, e);
 
-        for c in &mut self.children {
-            match c {
-                EntityChild::Entity(ent) => {
-                    ent.handle_event(a, e);
+            for c in &mut self.children {
+                match c {
+                    EntityChild::Entity(ent) => {
+                        ent.handle_event(a, e);
+                    }
+                    _ => {}
                 }
-                _ => {}
             }
         }
     }
@@ -137,14 +155,16 @@ impl Entity {
     }
 
     pub fn update(&mut self, app: &App, dt: f32) {
-        (self.vtable.update_fn)(self, app, dt);
+        if self.active {
+            (self.vtable.update_fn)(self, app, dt);
 
-        for c in &mut self.children {
-            match c {
-                EntityChild::Entity(ent) => {
-                    ent.update(app, dt);
+            for c in &mut self.children {
+                match c {
+                    EntityChild::Entity(ent) => {
+                        ent.update(app, dt);
+                    }
+                    _ => {}
                 }
-                _ => {}
             }
         }
     }
@@ -154,21 +174,23 @@ impl Entity {
     }
 
     pub fn render_components(&mut self, app: &App, parent_offset: (f32, f32)) {
-        let offset = match self.find_component::<Offset>(OFFSET_NAME) {
-            Ok(offset) => (parent_offset.0 + offset.x, parent_offset.1 + offset.y),
-            _ => parent_offset,
-        };
+        if self.visible {
+            let offset = match self.find_component::<Offset>(OFFSET_NAME) {
+                Ok(offset) => (parent_offset.0 + offset.x, parent_offset.1 + offset.y),
+                _ => parent_offset,
+            };
 
-        (self.vtable.prerender_fn)(self, offset);
+            (self.vtable.prerender_fn)(self, offset);
 
-        for c in &mut self.children {
-            match c {
-                EntityChild::Entity(ent) => {
-                    ent.render_components(app, offset);
-                }
+            for c in &mut self.children {
+                match c {
+                    EntityChild::Entity(ent) => {
+                        ent.render_components(app, offset);
+                    }
 
-                EntityChild::Component(cmp) => {
-                    cmp.render(app, offset);
+                    EntityChild::Component(cmp) => {
+                        cmp.render(app, offset);
+                    }
                 }
             }
         }
@@ -185,6 +207,7 @@ pub trait RenderableEntity {
     fn set_rotation(&mut self, r: f32);
     fn set_scale_x(&mut self, sx: f32);
     fn set_scale_y(&mut self, sy: f32);
+    fn set_color_mod(&mut self, r: f32, g: f32, b: f32);
 }
 
 // Functions to support "renderable" entities
@@ -258,6 +281,14 @@ impl RenderableEntity for Entity {
             self,
             &mut None,
             &Event::UpdateRenderable(UpdateRenderablePayload::ScaleY(sy)),
+        );
+    }
+
+    fn set_color_mod(&mut self, r: f32, g: f32, b: f32) {
+        (self.vtable.event_fn)(
+            self,
+            &mut None,
+            &Event::UpdateRenderable(UpdateRenderablePayload::ColorMod(r, g, b)),
         );
     }
 }
