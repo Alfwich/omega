@@ -47,9 +47,9 @@ fn update_button(e: &mut Entity, _app: &App, _dt: f32) {
             && my < by + half_height;
 
         if over_button {
-            button.color.x = 0.;
+            button.color.r = 0.;
         } else {
-            button.color.x = 1.;
+            button.color.r = 1.;
         }
     }
 

@@ -1,11 +1,13 @@
 use crate::app::App;
 use crate::core::component::component::Component;
 use crate::core::resource::TextLoadInfo;
+use crate::util::color::Color;
 
 use core::ffi::c_void;
 
 use gl::*;
 extern crate nalgebra_glm as glm;
+
 
 use core::any::Any;
 
@@ -20,12 +22,15 @@ pub struct Text {
     pub rotation: f32,
     pub width: u32,
     pub height: u32,
+    pub color: Color,
+    pub alpha: f32,
 }
 
 impl Text {
     pub fn new(name: &str) -> Self {
         Text {
             name: name.to_string(),
+            alpha: 1.,
             ..Default::default()
         }
     }
@@ -83,6 +88,13 @@ impl Component for Text {
                     1,
                     FALSE,
                     mvp.data.as_slice().as_ptr(),
+                );
+                Uniform4f(
+                    app.renderer.as_ref().unwrap().gl.text_program_color_loc,
+                    self.color.r,
+                    self.color.g,
+                    self.color.b,
+                    self.alpha,
                 );
                 BindTexture(TEXTURE_2D, tid);
                 DrawElements(TRIANGLES, 6, UNSIGNED_INT, std::ptr::null::<c_void>());

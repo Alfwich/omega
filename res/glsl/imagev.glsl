@@ -13,5 +13,5 @@ void main()
 {
    gl_Position = mvp * vec4(in_pos.xyz, 1.0);
    uv = in_uv * uv_rect.zw + uv_rect.xy;
-   c_mod = vec4(color.xyz, 1.0);
+   c_mod = color;
 }

@@ -128,7 +128,8 @@ impl Entity {
         }
     }
 
-    /// Reorder children based on z_index value
+    /// Reorder children based on z_index value. This will recursively reorder the entire Entity tree.
+    /// Parent z_index ordering will determine the final outcome where z_index does not impact global ordering.
     pub fn reorder_children(&mut self) {
         self.children.sort_by(|a, b| {
             let av = match a {
@@ -144,6 +145,7 @@ impl Entity {
             av.partial_cmp(&bv).unwrap()
         });
 
+        // Recursive call to reorder whole graph
         for c in &mut self.children {
             match c {
                 EntityChild::Entity(ent) => {
@@ -207,6 +209,7 @@ pub trait RenderableEntity {
     fn set_rotation(&mut self, r: f32);
     fn set_scale_x(&mut self, sx: f32);
     fn set_scale_y(&mut self, sy: f32);
+    fn set_alpha(&mut self, a: f32);
     fn set_color_mod(&mut self, r: f32, g: f32, b: f32);
 }
 
@@ -281,6 +284,14 @@ impl RenderableEntity for Entity {
             self,
             &mut None,
             &Event::UpdateRenderable(UpdateRenderablePayload::ScaleY(sy)),
+        );
+    }
+
+    fn set_alpha(&mut self, a: f32) {
+        (self.vtable.event_fn)(
+            self,
+            &mut None,
+            &Event::UpdateRenderable(UpdateRenderablePayload::Alpha(a)),
         );
     }
 

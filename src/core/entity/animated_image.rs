@@ -90,8 +90,11 @@ fn handle_event(e: &mut Entity, _app: &mut Option<&mut App>, ev: &Event) {
                 UpdateRenderablePayload::ScaleY(sy) => {
                     img.scale.1 = *sy;
                 }
+                UpdateRenderablePayload::Alpha(a) => {
+                    img.alpha = *a;
+                }
                 UpdateRenderablePayload::ColorMod(r, g, b) => {
-                    img.color = glm::make_vec3(&[*r, *g, *b]);
+                    img.color.update(*r, *g, *b);
                 }
             }
         }

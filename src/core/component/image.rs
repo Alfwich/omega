@@ -2,12 +2,13 @@ use crate::app::App;
 use crate::core::component::component::Component;
 use crate::core::renderer::app_gl::Texture;
 
+use crate::util::color::Color;
 use crate::util::rect::Rect;
 
 use core::ffi::c_void;
 
 use gl::*;
-use glm::TVec3;
+
 extern crate nalgebra_glm as glm;
 
 use core::any::Any;
@@ -30,7 +31,8 @@ pub struct Image {
     pub rotation: f32,
     pub width: f32,
     pub height: f32,
-    pub color: TVec3<f32>,
+    pub color: Color,
+    pub alpha: f32,
 
     // Optional Section of the image to render in screen space
     pub r_rect: Option<Rect>,
@@ -40,8 +42,20 @@ pub struct Image {
 
 impl Default for Image {
     fn default() -> Self {
-        let (zindex, name, border, texture, x, y, rotation, width, height, r_rect, render_type) =
-            Default::default();
+        let (
+            zindex,
+            name,
+            border,
+            texture,
+            x,
+            y,
+            rotation,
+            width,
+            height,
+            r_rect,
+            render_type,
+            color,
+        ) = Default::default();
 
         Image {
             name,
@@ -56,7 +70,8 @@ impl Default for Image {
             r_rect,
             render_type,
             scale: (1., 1.),
-            color: glm::make_vec3(&[1., 1., 1.]),
+            color,
+            alpha: 1.,
         }
     }
 }
@@ -130,10 +145,10 @@ impl Component for Image {
 
                 Uniform4f(
                     app.renderer.as_ref().unwrap().gl.image_program_color_loc,
-                    self.color.x,
-                    self.color.y,
-                    self.color.z,
-                    1.0,
+                    self.color.r,
+                    self.color.g,
+                    self.color.b,
+                    self.alpha,
                 );
 
                 match &self.r_rect {

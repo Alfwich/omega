@@ -168,9 +168,9 @@ fn handle_event(e: &mut Entity, app: &mut Option<&mut App>, ev: &Event) {
                         dynamic_cmp.y = thread_rng.gen_range(0f32..1000f32);
                         dynamic_cmp.width = info.width as f32;
                         dynamic_cmp.height = info.height as f32;
-                        dynamic_cmp.color.x = thread_rng.gen_range(0f32..1f32);
-                        dynamic_cmp.color.y = thread_rng.gen_range(0f32..1f32);
-                        dynamic_cmp.color.z = thread_rng.gen_range(0f32..1f32);
+                        dynamic_cmp.color.r = thread_rng.gen_range(0f32..1f32);
+                        dynamic_cmp.color.g = thread_rng.gen_range(0f32..1f32);
+                        dynamic_cmp.color.b = thread_rng.gen_range(0f32..1f32);
                         e.add_component(dynamic_cmp);
                     }
                 }
@@ -182,12 +182,14 @@ fn handle_event(e: &mut Entity, app: &mut Option<&mut App>, ev: &Event) {
                     let animated_image = e.find_child_by_name("test-animated").unwrap();
                     animated_image.active = false;
                     animated_image.set_color_mod(0.5, 0.5, 0.5);
+                    animated_image.set_alpha(0.5);
                 }
 
                 &Key::RBracket => {
                     let animated_image = e.find_child_by_name("test-animated").unwrap();
                     animated_image.active = true;
                     animated_image.set_color_mod(1., 1., 1.);
+                    animated_image.set_alpha(1.);
                 }
 
                 &Key::Num9 => {
@@ -367,6 +369,10 @@ pub fn make_testbed(app: &mut App) -> Entity {
         let mut text = Text::new_with_text("title", app, "Omega Ω");
         text.x = (app.renderer.as_ref().unwrap().viewport.window_size.0 / 2.) as i32;
         text.y = (app.renderer.as_ref().unwrap().viewport.window_size.1 / 2.) as i32;
+        text.alpha = 0.5;
+        text.color.r = 1.0;
+        text.color.g = 0.;
+        text.color.b = 0.;
         e.add_component(text);
 
         let d = 3;

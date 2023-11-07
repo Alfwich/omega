@@ -21,6 +21,7 @@ pub enum UpdateRenderablePayload {
     Rotation(f32),
     ScaleX(f32),
     ScaleY(f32),
+    Alpha(f32),
     ColorMod(f32, f32, f32),
 }
 

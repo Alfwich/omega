@@ -26,6 +26,7 @@ pub struct AppGL {
 
     pub text_program_id: u32,
     pub text_program_mvp_loc: i32,
+    pub text_program_color_loc: i32,
 }
 
 #[repr(C)]
@@ -542,6 +543,10 @@ impl Default for AppGL {
                 GetUniformLocation(text_program_id, mvp_name.as_ptr() as *const i8);
             report_error("text mvp");
 
+            let text_program_color_loc =
+                GetUniformLocation(text_program_id, color_name.as_ptr() as *const i8);
+            report_error("text color");
+
             AppGL {
                 vao,
                 vbo,
@@ -554,6 +559,7 @@ impl Default for AppGL {
 
                 text_program_id,
                 text_program_mvp_loc,
+                text_program_color_loc,
             }
         }
     }
