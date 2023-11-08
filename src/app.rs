@@ -2,11 +2,11 @@ use sfml::system::Vector2;
 use sfml::window::Window;
 
 use crate::core::component::pre_frame::PreFrame;
-use crate::core::entity::entity::Entity;
+use crate::core::entity::Entity;
 use crate::core::event::Event::{self, ImageLoadEvent, SFMLEvent};
 use crate::core::event::ImageLoadEventPayload;
-use crate::core::renderer::renderer::Renderer;
 use crate::core::renderer::window::{make_window, WindowConfig, WindowStyle};
+use crate::core::renderer::Renderer;
 use crate::core::resource::Resources;
 use crate::game::scene::entry::make_entry;
 use crate::game::state::GameState;
@@ -19,7 +19,7 @@ pub struct App {
     app_events: Vec<Event>,
     pub state: GameState,
     pub resource: Resources,
-    pub renderer: Option<Renderer>,
+    pub renderer: Renderer,
 }
 
 impl App {
@@ -42,8 +42,6 @@ impl App {
                 .unwrap()
                 .set_vertical_sync_enabled(config.vsync_enabled);
             self.renderer
-                .as_mut()
-                .unwrap()
                 .update_size(config.width as f32, config.height as f32);
 
             self.app_events.push(Event::WindowUpdated(*config));
@@ -70,18 +68,14 @@ impl App {
         // Handle async events
         {
             let mut image_load_events = Vec::new();
-            loop {
-                if let Some(image_load_result) = self.resource.recv_load_events() {
-                    let load_info = image_load_result.1;
-                    image_load_events.push(ImageLoadEvent(ImageLoadEventPayload {
-                        handle: load_info.handle,
-                        texture_id: load_info.texture_id,
-                        width: load_info.width,
-                        height: load_info.height,
-                    }));
-                } else {
-                    break;
-                }
+            while let Some(image_load_result) = self.resource.recv_load_events() {
+                let load_info = image_load_result.1;
+                image_load_events.push(ImageLoadEvent(ImageLoadEventPayload {
+                    handle: load_info.handle,
+                    texture_id: load_info.texture_id,
+                    width: load_info.width,
+                    height: load_info.height,
+                }));
             }
 
             for e in image_load_events.iter() {
@@ -103,11 +97,12 @@ impl App {
         self.window_config.style = WindowStyle::Windowed;
         self.window_config.vsync_enabled = false;
         self.window = Some(*make_window(&self.window_config));
-
-        self.renderer = Some(Renderer::new(
+        // GL MUST be init after the window since this requires a valid GL context
+        self.renderer.init_gl();
+        self.renderer.update_size(
             self.window_config.width as f32,
             self.window_config.height as f32,
-        ));
+        );
         let mut frame_timer = Timer::default();
 
         {

@@ -149,41 +149,38 @@ impl Default for Resources {
 
 impl Resources {
     pub fn recv_load_events(&mut self) -> Option<(String, ImageLoadPayload)> {
-        match self.remote_image_rx.try_recv() {
-            Ok(payload) => {
-                let payload_key = payload.path.clone();
-                // Special case where the texture gets loaded sync before an async request resolves
-                if self.texture_data.contains_key(&payload_key) {
-                    if payload.texture_id != 0
-                        && payload.texture_id != self.texture_data[&payload_key].texture_id
-                    {
-                        app_gl::release_texture(payload.texture_id);
-                    }
-                    return Some((
-                        payload_key,
-                        ImageLoadPayload {
-                            handle: payload.handle,
-                            image_type: payload.image_type,
-                            path: payload.path.clone(),
-                            texture_id: self.texture_data[&payload.path.clone()].texture_id,
-                            width: self.texture_data[&payload.path.clone()].width,
-                            height: self.texture_data[&payload.path.clone()].height,
-                        },
-                    ));
-                } else {
-                    self.texture_data.insert(
-                        payload.path.clone(),
-                        Texture {
-                            texture_id: payload.texture_id,
-                            width: payload.width,
-                            height: payload.height,
-                        },
-                    );
-                    self.remote_image_loading.remove(&payload.path.clone());
-                    return Some((payload.path.clone(), payload.clone()));
+        if let Ok(payload) = self.remote_image_rx.try_recv() {
+            let payload_key = payload.path.clone();
+            // Special case where the texture gets loaded sync before an async request resolves
+            if self.texture_data.contains_key(&payload_key) {
+                if payload.texture_id != 0
+                    && payload.texture_id != self.texture_data[&payload_key].texture_id
+                {
+                    app_gl::release_texture(payload.texture_id);
                 }
+                return Some((
+                    payload_key,
+                    ImageLoadPayload {
+                        handle: payload.handle,
+                        image_type: payload.image_type,
+                        path: payload.path.clone(),
+                        texture_id: self.texture_data[&payload.path.clone()].texture_id,
+                        width: self.texture_data[&payload.path.clone()].width,
+                        height: self.texture_data[&payload.path.clone()].height,
+                    },
+                ));
+            } else {
+                self.texture_data.insert(
+                    payload.path.clone(),
+                    Texture {
+                        texture_id: payload.texture_id,
+                        width: payload.width,
+                        height: payload.height,
+                    },
+                );
+                self.remote_image_loading.remove(&payload.path.clone());
+                return Some((payload.path.clone(), payload.clone()));
             }
-            _ => {}
         }
 
         None

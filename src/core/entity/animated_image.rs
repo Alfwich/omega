@@ -1,7 +1,7 @@
 use crate::app::App;
-use crate::core::component::component::Component;
 use crate::core::component::image::{Image, ImageRenderType};
-use crate::core::entity::entity::{Entity, EntityFns};
+use crate::core::component::Component;
+use crate::core::entity::{Entity, EntityFns};
 use crate::core::event::{Event, UpdateRenderablePayload};
 
 use crate::util::rect::Rect;
@@ -51,10 +51,11 @@ fn update_animated_image(e: &mut Entity, _app: &App, dt: f32) {
         let img = e
             .find_component::<Image>(ANIMATED_IMAGE_TEXTURE_NAME)
             .unwrap();
-        img.r_rect = Some(data.frames[data.frame].clone());
+        img.r_rect = Some(data.frames[data.frame]);
     }
 }
 
+#[allow(clippy::single_match)]
 fn handle_event(e: &mut Entity, _app: &mut Option<&mut App>, ev: &Event) {
     match ev {
         Event::UpdateRenderable(p) => {
@@ -85,13 +86,13 @@ fn handle_event(e: &mut Entity, _app: &mut Option<&mut App>, ev: &Event) {
                     img.rotation = *r;
                 }
                 UpdateRenderablePayload::ScaleX(sx) => {
-                    img.scale.0 = *sx;
+                    img.scale.x = *sx;
                 }
                 UpdateRenderablePayload::ScaleY(sy) => {
-                    img.scale.1 = *sy;
+                    img.scale.y = *sy;
                 }
                 UpdateRenderablePayload::Alpha(a) => {
-                    img.alpha = *a;
+                    img.alpha.val = *a;
                 }
                 UpdateRenderablePayload::ColorMod(r, g, b) => {
                     img.color.update(*r, *g, *b);

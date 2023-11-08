@@ -1,8 +1,8 @@
 use crate::app::App;
 use crate::core::component::audio_clip::AudioClip;
-use crate::core::component::component::Component;
 use crate::core::component::image::Image;
-use crate::core::entity::entity::{Entity, EntityFns};
+use crate::core::component::Component;
+use crate::core::entity::{Entity, EntityFns};
 use crate::core::event::{Event, UpdateRenderablePayload};
 
 use sfml::window::Event as SFMLEvent;
@@ -63,6 +63,7 @@ fn update_button(e: &mut Entity, _app: &App, _dt: f32) {
     }
 }
 
+#[allow(clippy::collapsible_match, clippy::single_match)]
 fn handle_event(e: &mut Entity, _app: &mut Option<&mut App>, ev: &Event) {
     let data = e.find_component::<Data>("data").unwrap();
     match ev {

@@ -12,21 +12,25 @@ extern crate nalgebra_glm as glm;
 use std::convert::TryInto;
 
 use crate::core::resource::TextLoadInfo;
-use crate::util::util::clamp;
+use crate::util::clamp;
 
+#[derive(Debug, Default, Clone, Copy)]
+pub struct GLProgram {
+    pub id: u32,
+    pub mvp_loc: i32,
+    pub color_loc: i32,
+    pub uv_rect_loc: i32,
+}
+
+#[derive(Debug, Default)]
 pub struct AppGL {
+    has_init: bool,
     pub vao: u32,
     pub vbo: u32,
     pub ebo: u32,
 
-    pub image_program_id: u32,
-    pub image_program_mvp_loc: i32,
-    pub image_program_color_loc: i32,
-    pub image_program_uv_rect_loc: i32,
-
-    pub text_program_id: u32,
-    pub text_program_mvp_loc: i32,
-    pub text_program_color_loc: i32,
+    pub image_program: GLProgram,
+    pub text_program: GLProgram,
 }
 
 #[repr(C)]
@@ -236,7 +240,7 @@ fn sw_render_text_to_buffer(text_info: &TextLoadInfo, data: &mut TextTextureData
     data.height = data.rows.len();
 
     let mut max_width = 0;
-    for (_k, v) in &data.rows {
+    for v in data.rows.values() {
         if v.len() > max_width {
             max_width = v.len();
         }
@@ -494,8 +498,12 @@ pub unsafe fn report_error(prefix: &str) {
     }
 }
 
-impl Default for AppGL {
-    fn default() -> Self {
+impl AppGL {
+    pub fn init(&mut self) {
+        if self.has_init {
+            return;
+        }
+
         // Init GL after GL context has been created
         gl_loader::init_gl();
         load_with(|s| gl_loader::get_proc_address(s) as *const _);
@@ -503,64 +511,49 @@ impl Default for AppGL {
         unsafe {
             report_error("gl-init");
 
-            let vao = gen_vertex_buffer();
+            self.vao = gen_vertex_buffer();
             report_error("gen vao");
 
-            let vbo = gen_buffer();
+            self.vbo = gen_buffer();
             report_error("gen vbo");
 
-            let ebo = gen_buffer();
+            self.ebo = gen_buffer();
             report_error("gen ebo");
 
-            let image_program_id =
+            self.image_program.id =
                 create_and_link_program("res/glsl/imagev.glsl", "res/glsl/image.glsl");
             report_error("create_and_link_program image");
 
-            let text_program_id =
+            self.text_program.id =
                 create_and_link_program("res/glsl/textv.glsl", "res/glsl/text.glsl");
             report_error("text");
 
-            upload_buffer_data(vao, vbo, ebo);
+            upload_buffer_data(self.vao, self.vbo, self.ebo);
             report_error("upload buffer data");
 
             let mvp_name = "mvp\0".as_bytes();
             let color_name = "color\0".as_bytes();
             let uv_rect = "uv_rect\0".as_bytes();
 
-            let image_program_mvp_loc =
-                GetUniformLocation(image_program_id, mvp_name.as_ptr() as *const i8);
+            self.image_program.mvp_loc =
+                GetUniformLocation(self.image_program.id, mvp_name.as_ptr() as *const i8);
             report_error("image mvp");
 
-            let image_program_color_loc =
-                GetUniformLocation(image_program_id, color_name.as_ptr() as *const i8);
+            self.image_program.color_loc =
+                GetUniformLocation(self.image_program.id, color_name.as_ptr() as *const i8);
             report_error("image color");
 
-            let image_program_uv_rect_loc =
-                GetUniformLocation(image_program_id, uv_rect.as_ptr() as *const i8);
+            self.image_program.uv_rect_loc =
+                GetUniformLocation(self.image_program.id, uv_rect.as_ptr() as *const i8);
             report_error("image uv_rect");
 
-            let text_program_mvp_loc =
-                GetUniformLocation(text_program_id, mvp_name.as_ptr() as *const i8);
+            self.text_program.mvp_loc =
+                GetUniformLocation(self.text_program.id, mvp_name.as_ptr() as *const i8);
             report_error("text mvp");
 
-            let text_program_color_loc =
-                GetUniformLocation(text_program_id, color_name.as_ptr() as *const i8);
+            self.text_program.color_loc =
+                GetUniformLocation(self.text_program.id, color_name.as_ptr() as *const i8);
             report_error("text color");
-
-            AppGL {
-                vao,
-                vbo,
-                ebo,
-
-                image_program_id,
-                image_program_mvp_loc,
-                image_program_color_loc,
-                image_program_uv_rect_loc,
-
-                text_program_id,
-                text_program_mvp_loc,
-                text_program_color_loc,
-            }
         }
     }
 }
@@ -571,8 +564,8 @@ impl Drop for AppGL {
             DeleteBuffers(1, &self.ebo);
             DeleteBuffers(1, &self.vbo);
             DeleteVertexArrays(1, &self.vao);
-            DeleteProgram(self.image_program_id);
-            DeleteProgram(self.text_program_id);
+            DeleteProgram(self.image_program.id);
+            DeleteProgram(self.text_program.id);
             gl_loader::end_gl();
         }
     }

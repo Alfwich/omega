@@ -25,6 +25,7 @@ pub enum UpdateRenderablePayload {
     ColorMod(f32, f32, f32),
 }
 
+#[allow(clippy::enum_variant_names)]
 #[derive(Debug, Clone, Copy)]
 pub enum Event {
     /// Raw SFMLEvent

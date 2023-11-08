@@ -1,14 +1,14 @@
 use crate::app::App;
 use crate::core::component::audio_clip::AudioClip;
-use crate::core::component::component::Component;
 use crate::core::component::image::Image;
 use crate::core::component::offset::{Offset, OFFSET_NAME};
 use crate::core::component::text::Text;
+use crate::core::component::Component;
 use crate::core::entity::animated_image::{
     animated_image_add_animation, animated_image_get_position, animated_image_set_animation,
     make_animated_image,
 };
-use crate::core::entity::entity::{Entity, EntityFns, RenderableEntity};
+use crate::core::entity::{Entity, EntityFns, RenderableEntity};
 use crate::core::event::Event;
 
 use crate::core::resource::{AsyncLoadHandle, TextLoadInfo};
@@ -97,7 +97,7 @@ fn update_testbed(e: &mut Entity, app: &App, dt: f32) {
                 _ => {}
             }
             let mario_location = animated_image_get_position(mario);
-            if mario_location.1 < app.renderer.as_ref().unwrap().viewport.window_size.1 / 2. {
+            if mario_location.1 < app.renderer.viewport.window_size.1 / 2. {
                 mario.zindex = -1;
             } else {
                 mario.zindex = 1;
@@ -118,14 +118,14 @@ fn handle_event(e: &mut Entity, app: &mut Option<&mut App>, ev: &Event) {
                 card.x = *x as f32 - offset.0;
                 card.y = *y as f32 - offset.1;
             }
-            SFMLEvent::KeyPressed { code, .. } => match code {
-                &Key::W => {
+            SFMLEvent::KeyPressed { code, .. } => match *code {
+                Key::W => {
                     let animated_image = e.find_child_by_name("test-animated").unwrap();
                     if animated_image.active {
                         animated_image.move_y(-10.);
                     }
                 }
-                &Key::A => {
+                Key::A => {
                     {
                         let animated_image = e.find_child_by_name("test-animated").unwrap();
                         if animated_image.active {
@@ -138,14 +138,14 @@ fn handle_event(e: &mut Entity, app: &mut Option<&mut App>, ev: &Event) {
                         data.left_down = true;
                     }
                 }
-                &Key::S => {
+                Key::S => {
                     let animated_image = e.find_child_by_name("test-animated").unwrap();
                     if animated_image.active {
                         animated_image_set_animation(animated_image, "swim");
                         animated_image.move_y(10.);
                     }
                 }
-                &Key::D => {
+                Key::D => {
                     {
                         let animated_image = e.find_child_by_name("test-animated").unwrap();
                         if animated_image.active {
@@ -158,7 +158,7 @@ fn handle_event(e: &mut Entity, app: &mut Option<&mut App>, ev: &Event) {
                         data.right_down = true;
                     }
                 }
-                &Key::U => {
+                Key::U => {
                     if let Some(a) = app {
                         let info = a.resource.load_image_from_disk(DISK_IMAGE_PATH).unwrap();
                         let mut dynamic_cmp = Image::default();
@@ -174,42 +174,42 @@ fn handle_event(e: &mut Entity, app: &mut Option<&mut App>, ev: &Event) {
                         e.add_component(dynamic_cmp);
                     }
                 }
-                &Key::Q => {
+                Key::Q => {
                     app.as_mut().unwrap().close_window();
                 }
 
-                &Key::LBracket => {
+                Key::LBracket => {
                     let animated_image = e.find_child_by_name("test-animated").unwrap();
                     animated_image.active = false;
                     animated_image.set_color_mod(0.5, 0.5, 0.5);
                     animated_image.set_alpha(0.5);
                 }
 
-                &Key::RBracket => {
+                Key::RBracket => {
                     let animated_image = e.find_child_by_name("test-animated").unwrap();
                     animated_image.active = true;
                     animated_image.set_color_mod(1., 1., 1.);
                     animated_image.set_alpha(1.);
                 }
 
-                &Key::Num9 => {
+                Key::Num9 => {
                     let animated_image = e.find_child_by_name("test-animated").unwrap();
                     animated_image.visible = false;
                 }
 
-                &Key::Num0 => {
+                Key::Num0 => {
                     let animated_image = e.find_child_by_name("test-animated").unwrap();
                     animated_image.visible = true;
                 }
 
-                &Key::Num7 => {
+                Key::Num7 => {
                     let mut config = app.as_ref().unwrap().get_window_config();
                     config.width = 1280;
                     config.height = 720;
                     app.as_mut().unwrap().update_window_config(&config);
                 }
 
-                &Key::Num8 => {
+                Key::Num8 => {
                     let mut config = app.as_ref().unwrap().get_window_config();
                     config.width = 1920;
                     config.height = 1080;
@@ -217,8 +217,8 @@ fn handle_event(e: &mut Entity, app: &mut Option<&mut App>, ev: &Event) {
                 }
                 _ => {}
             },
-            SFMLEvent::KeyReleased { code, .. } => match code {
-                &Key::A => {
+            SFMLEvent::KeyReleased { code, .. } => match *code {
+                Key::A => {
                     {
                         let animated_image = e.find_child_by_name("test-animated").unwrap();
                         if animated_image.active {
@@ -231,7 +231,7 @@ fn handle_event(e: &mut Entity, app: &mut Option<&mut App>, ev: &Event) {
                         data.left_down = false;
                     }
                 }
-                &Key::D => {
+                Key::D => {
                     {
                         let animated_image = e.find_child_by_name("test-animated").unwrap();
                         if animated_image.active {
@@ -310,8 +310,8 @@ pub fn make_testbed(app: &mut App) -> Entity {
             texture_info.height as f32,
         );
         image.zindex = -5;
-        image.x = app.renderer.as_ref().unwrap().viewport.window_size.0 / 2.;
-        image.y = app.renderer.as_ref().unwrap().viewport.window_size.1 / 2.;
+        image.x = app.renderer.viewport.window_size.0 / 2.;
+        image.y = app.renderer.viewport.window_size.1 / 2.;
         e.add_component(image);
     }
 
@@ -360,16 +360,16 @@ pub fn make_testbed(app: &mut App) -> Entity {
             Some(crate::core::component::image::ImageRenderType::Linear),
         );
 
-        image.set_x(app.renderer.as_ref().unwrap().viewport.window_size.0 / 2.);
-        image.set_y(app.renderer.as_ref().unwrap().viewport.window_size.1 / 2.);
+        image.set_x(app.renderer.viewport.window_size.0 / 2.);
+        image.set_y(app.renderer.viewport.window_size.1 / 2.);
         e.add_child(image);
     }
 
     {
         let mut text = Text::new_with_text("title", app, "Omega Ω");
-        text.x = (app.renderer.as_ref().unwrap().viewport.window_size.0 / 2.) as i32;
-        text.y = (app.renderer.as_ref().unwrap().viewport.window_size.1 / 2.) as i32;
-        text.alpha = 0.5;
+        text.x = (app.renderer.viewport.window_size.0 / 2.) as i32;
+        text.y = (app.renderer.viewport.window_size.1 / 2.) as i32;
+        text.alpha.val = 0.5;
         text.color.r = 1.0;
         text.color.g = 0.;
         text.color.b = 0.;
@@ -392,8 +392,8 @@ pub fn make_testbed(app: &mut App) -> Entity {
                 };
                 let mut t = Text::new("tester");
                 t.update_text(app, &text_info);
-                t.x = x * (app.renderer.as_ref().unwrap().viewport.window_size.0 as i32 / d);
-                t.y = y * (app.renderer.as_ref().unwrap().viewport.window_size.1 as i32 / d);
+                t.x = x * (app.renderer.viewport.window_size.0 as i32 / d);
+                t.y = y * (app.renderer.viewport.window_size.1 as i32 / d);
                 e.add_component(t);
             }
         }

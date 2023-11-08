@@ -1,4 +1,4 @@
-use crate::core::component::component::Component;
+use crate::core::component::Component;
 
 use core::any::Any;
 

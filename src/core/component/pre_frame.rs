@@ -1,5 +1,5 @@
 use crate::app::App;
-use crate::core::component::component::Component;
+use crate::core::component::Component;
 
 use gl::*;
 
@@ -19,8 +19,8 @@ impl Component for PreFrame {
             Viewport(
                 0,
                 0,
-                app.renderer.as_ref().unwrap().viewport.window_size.0 as i32,
-                app.renderer.as_ref().unwrap().viewport.window_size.1 as i32,
+                app.renderer.viewport.window_size.0 as i32,
+                app.renderer.viewport.window_size.1 as i32,
             );
         }
     }

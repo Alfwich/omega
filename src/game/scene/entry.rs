@@ -1,6 +1,6 @@
 use crate::{
     app::App,
-    core::entity::entity::{Entity, EntityFns},
+    core::entity::{Entity, EntityFns},
 };
 
 use super::testbed::make_testbed;

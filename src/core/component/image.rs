@@ -1,9 +1,12 @@
 use crate::app::App;
-use crate::core::component::component::Component;
+use crate::core::component::Component;
 use crate::core::renderer::app_gl::Texture;
+use crate::core::renderer::MVPConfig;
 
+use crate::util::alpha::Alpha;
 use crate::util::color::Color;
 use crate::util::rect::Rect;
+use crate::util::scale::Scale;
 
 use core::ffi::c_void;
 
@@ -19,10 +22,10 @@ pub enum ImageRenderType {
     Linear,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Image {
     pub name: String,
-    pub scale: (f32, f32),
+    pub scale: Scale,
     pub zindex: i32,
     pub border: f32,
     pub texture: Option<Texture>,
@@ -32,48 +35,12 @@ pub struct Image {
     pub width: f32,
     pub height: f32,
     pub color: Color,
-    pub alpha: f32,
+    pub alpha: Alpha,
 
     // Optional Section of the image to render in screen space
     pub r_rect: Option<Rect>,
 
     pub render_type: Option<ImageRenderType>,
-}
-
-impl Default for Image {
-    fn default() -> Self {
-        let (
-            zindex,
-            name,
-            border,
-            texture,
-            x,
-            y,
-            rotation,
-            width,
-            height,
-            r_rect,
-            render_type,
-            color,
-        ) = Default::default();
-
-        Image {
-            name,
-            zindex,
-            border,
-            texture,
-            x,
-            y,
-            rotation,
-            width,
-            height,
-            r_rect,
-            render_type,
-            scale: (1., 1.),
-            color,
-            alpha: 1.,
-        }
-    }
 }
 
 impl Image {
@@ -119,36 +86,37 @@ impl Component for Image {
 
     fn render(&self, app: &App, parent_offset: (f32, f32)) {
         if let Some(texture) = self.texture {
-            let mvp = app.renderer.as_ref().unwrap().make_mvp(
-                self.x + parent_offset.0,
-                self.y + parent_offset.1,
-                self.width,
-                self.height,
-                self.rotation,
-                self.scale.0,
-                self.scale.1,
-            );
+            let mvp = app.renderer.make_mvp(&MVPConfig {
+                rect: Rect {
+                    x: self.x + parent_offset.0,
+                    y: self.y + parent_offset.1,
+                    w: self.width,
+                    h: self.height,
+                },
+                rotation: self.rotation,
+                scale: self.scale,
+            });
 
             unsafe {
                 Enable(BLEND);
                 BlendFunc(SRC_ALPHA, ONE_MINUS_SRC_ALPHA);
-                BindVertexArray(app.renderer.as_ref().unwrap().gl.vao);
-                BindBuffer(ELEMENT_ARRAY_BUFFER, app.renderer.as_ref().unwrap().gl.ebo);
-                UseProgram(app.renderer.as_ref().unwrap().gl.image_program_id);
+                BindVertexArray(app.renderer.gl.vao);
+                BindBuffer(ELEMENT_ARRAY_BUFFER, app.renderer.gl.ebo);
+                UseProgram(app.renderer.gl.image_program.id);
 
                 UniformMatrix4fv(
-                    app.renderer.as_ref().unwrap().gl.image_program_mvp_loc,
+                    app.renderer.gl.image_program.mvp_loc,
                     1,
                     FALSE,
                     mvp.data.as_slice().as_ptr(),
                 );
 
                 Uniform4f(
-                    app.renderer.as_ref().unwrap().gl.image_program_color_loc,
+                    app.renderer.gl.image_program.color_loc,
                     self.color.r,
                     self.color.g,
                     self.color.b,
-                    self.alpha,
+                    self.alpha.val,
                 );
 
                 match &self.r_rect {
@@ -159,18 +127,12 @@ impl Component for Image {
                         let y = r.y / texture.height as f32;
                         let w = r.w / texture.width as f32;
                         let h = r.h / texture.height as f32;
-                        Uniform4f(
-                            app.renderer.as_ref().unwrap().gl.image_program_uv_rect_loc,
-                            x,
-                            y,
-                            w,
-                            h,
-                        );
+                        Uniform4f(app.renderer.gl.image_program.uv_rect_loc, x, y, w, h);
                     }
                     _ => {
                         // Default rect which renders the whole image
                         Uniform4f(
-                            app.renderer.as_ref().unwrap().gl.image_program_uv_rect_loc,
+                            app.renderer.gl.image_program.uv_rect_loc,
                             0.0,
                             0.0,
                             1.0,
