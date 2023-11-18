@@ -1,5 +1,9 @@
 use crate::core::renderer::app_gl::*;
 use sfml::{audio::SoundBuffer, window::Context, SfBox};
+use std::fs::File;
+
+use std::io::Read;
+use std::rc::Rc;
 use std::sync::mpsc::{Receiver, Sender};
 use std::thread::{self, JoinHandle};
 use std::{cell::RefCell, collections::HashMap};
@@ -49,10 +53,17 @@ impl Default for TextLoadInfo {
     }
 }
 
+struct Font {
+    pub data: Rc<Vec<u8>>,
+}
+
 pub struct Resources {
-    pub audio_data: HashMap<String, RefCell<SfBox<SoundBuffer>>>,
-    pub texture_data: HashMap<String, Texture>,
-    pub text_data: HashMap<String, Texture>,
+    /// Internal repositories for dynamic game data
+    audio_data: HashMap<String, RefCell<SfBox<SoundBuffer>>>,
+    texture_data: HashMap<String, Texture>,
+    text_data: HashMap<String, Texture>,
+    font_data: HashMap<String, Font>,
+
     remote_image_loading: HashMap<String, u32>,
     remote_image_work_tx: Sender<ImageLoadPayload>,
     remote_image_rx: Receiver<ImageLoadPayload>,
@@ -82,8 +93,7 @@ fn image_loading_proc_thread(rx: Receiver<ImageLoadPayload>, tx: Sender<ImageLoa
                         continue;
                     }
                 }
-                // HACK: Unsure why the thread-specific context failes to upload texture data inside the rx block.
-                //       Create a new GL context for loading this image data as it is needed.
+                // Create a new GL context for loading this image data as it is needed.
                 let _context = Context::new();
                 match payload.image_type {
                     ImageLoadPayloadType::Remote => {
@@ -136,6 +146,7 @@ impl Default for Resources {
             audio_data: HashMap::new(),
             texture_data: HashMap::new(),
             text_data: HashMap::new(),
+            font_data: HashMap::new(),
             remote_image_loading: HashMap::new(),
             remote_image_work_tx: in_tx,
             remote_image_rx: out_rx,
@@ -151,6 +162,8 @@ impl Resources {
     pub fn recv_load_events(&mut self) -> Option<(String, ImageLoadPayload)> {
         if let Ok(payload) = self.remote_image_rx.try_recv() {
             let payload_key = payload.path.clone();
+            let ppath = payload.path.clone();
+
             // Special case where the texture gets loaded sync before an async request resolves
             if self.texture_data.contains_key(&payload_key) {
                 if payload.texture_id != 0
@@ -164,9 +177,9 @@ impl Resources {
                         handle: payload.handle,
                         image_type: payload.image_type,
                         path: payload.path.clone(),
-                        texture_id: self.texture_data[&payload.path.clone()].texture_id,
-                        width: self.texture_data[&payload.path.clone()].width,
-                        height: self.texture_data[&payload.path.clone()].height,
+                        texture_id: self.texture_data[&ppath].texture_id,
+                        width: self.texture_data[&ppath].width,
+                        height: self.texture_data[&ppath].height,
                     },
                 ));
             } else {
@@ -178,8 +191,8 @@ impl Resources {
                         height: payload.height,
                     },
                 );
-                self.remote_image_loading.remove(&payload.path.clone());
-                return Some((payload.path.clone(), payload.clone()));
+                self.remote_image_loading.remove(&ppath);
+                return Some((ppath, payload.clone()));
             }
         }
 
@@ -295,7 +308,23 @@ impl Resources {
         if let Some(id) = self.text_data.get(&key) {
             Ok(*id)
         } else {
-            let text_result = render_text_to_texture(text_load_info)?;
+            let font_path = text_load_info.font_path.clone();
+            self.font_data.entry(font_path.clone()).or_insert_with(|| {
+                let mut source = File::open(font_path.clone()).unwrap();
+                let mut contents = Vec::new();
+                source
+                    .read_to_end(&mut contents)
+                    .map_err(|err| println!("{:?}", err))
+                    .ok();
+                Font {
+                        data: Rc::new(contents),
+                    }
+            });
+            let text_result = render_text_to_texture(RenderTextBundle {
+                text: &text_load_info.text,
+                text_size: text_load_info.font_size,
+                font_data: &self.font_data.get(&font_path).unwrap().data.clone(),
+            })?;
             self.text_data.insert(key, text_result);
             Ok(text_result)
         }
@@ -311,8 +340,5 @@ impl Drop for Resources {
         for texture_info in self.text_data.values() {
             release_texture(texture_info.texture_id);
         }
-        self.texture_data.clear();
-        self.audio_data.clear();
-        self.text_data.clear();
     }
 }
