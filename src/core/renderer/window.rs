@@ -9,7 +9,7 @@ pub fn make_window(config: &WindowConfig) -> Box<Window> {
     };
     let mut result = Window::new(
         (config.width, config.height),
-        "Omega",
+        &config.title,
         sfml_window_style,
         &Default::default(),
     );
@@ -28,8 +28,9 @@ pub enum WindowStyle {
     FullscreenBorderless,
 }
 
-#[derive(Debug, Default, Clone, Copy)]
+#[derive(Debug, Default, Clone)]
 pub struct WindowConfig {
+    pub(crate) title: String,
     pub(crate) width: u32,
     pub(crate) height: u32,
     pub(crate) fps_limit: u32,

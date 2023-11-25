@@ -31,8 +31,10 @@ impl App {
 
     pub fn update_window_config(&mut self, config: &WindowConfig) {
         if self.window.is_some() {
-            let size = Vector2::new(config.width, config.height);
-            self.window.as_mut().unwrap().set_size(size);
+            self.window
+                .as_mut()
+                .unwrap()
+                .set_size(Vector2::new(config.width, config.height));
             self.window
                 .as_mut()
                 .unwrap()
@@ -44,20 +46,20 @@ impl App {
             self.renderer
                 .update_size(config.width as f32, config.height as f32);
 
-            self.app_events.push(Event::WindowUpdated(*config));
+            self.app_events.push(Event::WindowUpdated(config.clone()));
         }
     }
 
     pub fn get_window_config(&self) -> WindowConfig {
-        self.window_config
+        self.window_config.clone()
     }
 
-    fn handle_window_events(&mut self, root: &mut Entity) {
+    fn handle_events(&mut self, root: &mut Entity) {
         // Handle any queued up application events first
         {
             let mut app_events = Vec::new();
             for e in &self.app_events {
-                app_events.push(*e);
+                app_events.push(e.clone());
             }
 
             for e in app_events {
@@ -84,19 +86,23 @@ impl App {
         }
 
         // Lastly, handle SFML window events
-        if self.window.is_some() {
-            while let Some(event) = self.window.as_mut().unwrap().poll_event() {
-                root.handle_event(&mut Some(self), &SFMLEvent(event));
+        {
+            if self.window.is_some() {
+                while let Some(event) = self.window.as_mut().unwrap().poll_event() {
+                    root.handle_event(&mut Some(self), &SFMLEvent(event));
+                }
             }
         }
     }
 
     pub fn run(&mut self) {
+        self.window_config.title = "Omega".to_string();
         self.window_config.width = 1920;
         self.window_config.height = 1080;
         self.window_config.style = WindowStyle::Windowed;
         self.window_config.vsync_enabled = false;
         self.window = Some(*make_window(&self.window_config));
+
         // GL MUST be init after the window since this requires a valid GL context
         self.renderer.init_gl();
         self.renderer.update_size(
@@ -113,7 +119,7 @@ impl App {
             while self.window.as_ref().unwrap().is_open() {
                 let dt = frame_timer.dt();
 
-                self.handle_window_events(&mut root);
+                self.handle_events(&mut root);
                 root.update(self, dt);
                 root.reorder_children();
                 self.window.as_mut().unwrap().set_active(true);

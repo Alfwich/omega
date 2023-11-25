@@ -26,7 +26,7 @@ pub enum UpdateRenderablePayload {
 }
 
 #[allow(clippy::enum_variant_names)]
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub enum Event {
     /// Raw SFMLEvent
     SFMLEvent(SFMLEvent),
