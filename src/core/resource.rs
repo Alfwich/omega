@@ -47,7 +47,7 @@ impl Default for TextLoadInfo {
     fn default() -> Self {
         Self {
             text: "".to_string(),
-            font_path: "res/font/GlacialIndifference-Bold.otf".to_string(),
+            font_path: "res/font/default.otf".to_string(),
             font_size: 36,
         }
     }
@@ -317,8 +317,8 @@ impl Resources {
                     .map_err(|err| println!("{:?}", err))
                     .ok();
                 Font {
-                        data: Rc::new(contents),
-                    }
+                    data: Rc::new(contents),
+                }
             });
             let text_result = render_text_to_texture(RenderTextBundle {
                 text: &text_load_info.text,

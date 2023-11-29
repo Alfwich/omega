@@ -12,7 +12,6 @@ extern crate nalgebra_glm as glm;
 
 use std::convert::TryInto;
 
-
 use crate::util::clamp;
 
 #[derive(Debug, Default, Clone, Copy)]
