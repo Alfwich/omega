@@ -13,6 +13,7 @@ use crate::core::event::Event;
 
 use crate::core::resource::{AsyncLoadHandle, TextLoadInfo};
 use crate::game::entity::button::make_button;
+use crate::util::alpha::Alpha;
 
 use rand::Rng;
 use sfml::window::{Event as SFMLEvent, Key};
@@ -26,6 +27,7 @@ struct Data {
     left_down: bool,
     right_down: bool,
     parent_offset: (f32, f32),
+    time_scale: f32,
 
     sync_loaded_texture_id: u32,
     async_local_handle: Option<AsyncLoadHandle>,
@@ -47,12 +49,14 @@ static DISK_IMAGE_PATH: &str = "res/img/motorcycle.png";
 static DISK_IMAGE_QUAD: &str = "res/img/test-clip.png";
 static DISK_IMAGE_MARIO: &str = "res/img/mario.png";
 
-fn update_testbed(e: &mut Entity, app: &App, dt: f32) {
+fn update_testbed(e: &mut Entity, app: &App, in_dt: f32) {
     //println!("fps: {}", 1. / dt);
 
     let d;
+    let dt;
     {
         let data = e.find_component::<Data>("data").unwrap();
+        dt = in_dt * data.time_scale;
         data.counter += dt;
         d = *data;
     }
@@ -283,7 +287,7 @@ fn prerender_testbed(e: &mut Entity, parent_offset: (f32, f32)) {
     e.find_component::<Data>("data").unwrap().parent_offset = parent_offset;
 }
 
-pub fn make_testbed(app: &mut App) -> Entity {
+pub fn make_testbed(app: &mut App, time_scale: f32) -> Entity {
     let mut e = Entity::new(
         "testbed",
         EntityFns {
@@ -293,7 +297,10 @@ pub fn make_testbed(app: &mut App) -> Entity {
         },
     );
 
-    let mut data = Data::default();
+    let mut data = Data {
+        time_scale,
+        ..Default::default()
+    };
 
     e.add_component(Offset::default());
 
@@ -312,6 +319,7 @@ pub fn make_testbed(app: &mut App) -> Entity {
         image.zindex = -5;
         image.x = app.renderer.viewport.window_size.0 / 2.;
         image.y = app.renderer.viewport.window_size.1 / 2.;
+        image.alpha = Alpha::new(0.2);
         e.add_component(image);
     }
 

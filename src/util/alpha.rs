@@ -8,3 +8,9 @@ impl Default for Alpha {
         Self { val: 1. }
     }
 }
+
+impl Alpha {
+    pub fn new(val: f32) -> Self {
+        Self { val }
+    }
+}
